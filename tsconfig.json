@@ -35,6 +35,7 @@
 		  ]
 	},
 	"exclude": [
+		"eslint.config.ts",
 		"example/**/*",
         "out"
 	]
