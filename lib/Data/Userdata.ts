@@ -1,25 +1,31 @@
+// eslint-disable-next-line max-classes-per-file -- FIXME: Refactor into multiple files.
 import { $print } from "rbxts-transform-debug";
-import { ZrValue } from "./Locals";
+
+import type { ZrValue } from "./locals";
 
 export abstract class ZrUserdata<T> {
 	public abstract value(): T;
 
-	public abstract isInstance(): this is ZrInstanceUserdata<Instance>;
-	public abstract isObject<T>(obj: { new (): T }): this is ZrObjectUserdata<T>;
+	public abstract isInstance(): this is ZrInstanceUserdata;
+	public abstract isObject<T>(object: new () => T): this is ZrObjectUserdata<T>;
 
-	public static fromInstance<TInstance extends Instance>(instance: TInstance) {
+	public static fromInstance<TInstance extends Instance>(
+		instance: TInstance,
+	): ZrInstanceUserdata<TInstance> {
 		return new ZrInstanceUserdata(instance);
 	}
 
-	public static fromLazyInstance<TInstance extends Instance>(lazyFn: () => TInstance) {
-		return new ZrInstanceUserdata(lazyFn);
+	public static fromLazyInstance<TInstance extends Instance>(
+		lazyFunc: () => TInstance,
+	): ZrInstanceUserdata<TInstance> {
+		return new ZrInstanceUserdata(lazyFunc);
 	}
 
-	public static fromRecord<T extends Record<string, ZrValue>>(record: T) {
+	public static fromRecord<T extends Record<string, ZrValue>>(record: T): ZrObjectUserdata<T> {
 		return new ZrObjectUserdata(record);
 	}
 
-	public static fromObject<TObject extends defined>(object: TObject) {
+	public static fromObject<TObject extends defined>(object: TObject): ZrObjectUserdata<TObject> {
 		return new ZrObjectUserdata(object);
 	}
 }
@@ -28,23 +34,23 @@ type PickZrValues<T> = { [P in keyof T]: T[P] extends ZrValue ? P : never }[keyo
 export type InferUserdataKeys<T> = T extends ZrInstanceUserdata<infer A> ? PickZrValues<A> : never;
 
 export class ZrObjectUserdata<T extends defined> extends ZrUserdata<T> {
-	public constructor(private object: T) {
+	constructor(private readonly object: T) {
 		super();
 	}
 
-	public isInstance() {
+	public isInstance(): boolean {
 		return false;
 	}
 
-	public isObject<T>(klass: { new (): T }): this is ZrObjectUserdata<T> {
+	public isObject<T>(klass: new () => T): this is ZrObjectUserdata<T> {
 		return this.object instanceof klass;
 	}
 
-	public toString() {
+	public toString(): string {
 		return "toString" in this.object ? tostring(this.object) : "[ZrObjectUserdata]";
 	}
 
-	public value() {
+	public value(): T {
 		return this.object;
 	}
 }
@@ -52,27 +58,28 @@ export class ZrObjectUserdata<T extends defined> extends ZrUserdata<T> {
 type MappedValues<T extends Instance> = T extends Instance ? ZrInstanceUserdata<T> : T;
 
 export class ZrInstanceUserdata<T extends Instance = Instance> extends ZrUserdata<T> {
-	public constructor(private instance: T | (() => T)) {
+	constructor(private instance: (() => T) | T) {
 		super();
 	}
 
-	public isInstance() {
+	public isInstance(): boolean {
 		return true;
 	}
 
-	public isObject(value: unknown) {
+	public isObject(value: unknown): boolean {
 		return false;
 	}
 
-	public toString() {
+	public toString(): string {
 		return tostring(this.value());
 	}
 
 	/**
-	 * Gets the property
-	 * @throws If the property isn't valid
+	 * Gets the property.
+	 *
+	 * @param name - The name of the property.
+	 * @throws If the property isn't valid.
 	 * @internal
-	 * @param name The name of the property
 	 */
 	public get<K extends PickZrValues<T> & string>(name: K): T[K] | ZrValue {
 		if (typeIs(this.instance, "function")) {
@@ -89,7 +96,7 @@ export class ZrInstanceUserdata<T extends Instance = Instance> extends ZrUserdat
 		}
 	}
 
-	public value() {
+	public value(): T {
 		if (typeIs(this.instance, "function")) {
 			this.instance = this.instance();
 			$print("lazyGet", this.instance);

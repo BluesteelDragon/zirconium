@@ -1,15 +1,15 @@
-import { ZrNodeKind } from "./Enum";
-import {
-	Node,
-	ParentNode,
-	BooleanLiteral,
+import { ZrNodeKind } from "./enum";
+import type {
 	ArrayIndexExpression,
+	BooleanLiteral,
 	Identifier,
-	PropertyAccessExpression,
+	Node,
 	NodeTypes,
-} from "./NodeTypes";
+	ParentNode,
+	PropertyAccessExpression,
+} from "./node-types";
 
-export function getKindName(kind: ZrNodeKind | undefined) {
+export function getKindName(kind: undefined | ZrNodeKind): string {
 	if (kind === undefined) {
 		return "<none>";
 	}
@@ -21,7 +21,7 @@ function isNode<K extends keyof NodeTypes>(node: Node, kind: K): node is NodeTyp
 	return node.kind === kind;
 }
 
-function interpolate(node: Identifier | PropertyAccessExpression | ArrayIndexExpression): string {
+function interpolate(node: ArrayIndexExpression | Identifier | PropertyAccessExpression): string {
 	if (isNode(node, ZrNodeKind.Identifier)) {
 		return node.name;
 	} else if (isNode(node, ZrNodeKind.PropertyAccessExpression)) {
@@ -33,23 +33,31 @@ function interpolate(node: Identifier | PropertyAccessExpression | ArrayIndexExp
 	throw `Invalid`;
 }
 
-export function getVariableName(node: Identifier | PropertyAccessExpression | ArrayIndexExpression) {
+export function getVariableName(
+	node: ArrayIndexExpression | Identifier | PropertyAccessExpression,
+): string {
 	return interpolate(node);
 }
 
-export function getFriendlyName(node: Node, isConst = false) {
-	if (node.kind === ZrNodeKind.String || node.kind === ZrNodeKind.InterpolatedString) {
-		return "string";
-	} else if (node.kind === ZrNodeKind.Number) {
-		return "number";
-	} else if (node.kind === ZrNodeKind.Boolean) {
-		return isConst ? (node as BooleanLiteral).value : "boolean";
+export function getFriendlyName(node: Node, isConst = false): boolean | string {
+	switch (node.kind) {
+		case ZrNodeKind.String:
+		case ZrNodeKind.InterpolatedString: {
+			return "string";
+		}
+		case ZrNodeKind.Number: {
+			return "number";
+		}
+		case ZrNodeKind.Boolean: {
+			return isConst ? (node as BooleanLiteral).value : "boolean";
+		}
+		default: {
+			return getKindName(node.kind);
+		}
 	}
-
-	return getKindName(node.kind);
 }
 
-export function getNodeKindName(node: Node) {
+export function getNodeKindName(node: Node): string {
 	if (node === undefined) {
 		return "<none>";
 	}

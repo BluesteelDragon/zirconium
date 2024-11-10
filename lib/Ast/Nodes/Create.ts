@@ -1,60 +1,73 @@
-import { ZrNodeKind, ZrNodeFlag, ZrTypeKeyword } from "./Enum";
-import {
-	InterpolatedStringExpression,
-	StringLiteral,
-	Node,
-	InnerExpression,
-	PrefixToken,
-	PrefixExpression,
-	SourceFile,
-	NumberLiteral,
+/* eslint-disable max-lines -- FIXME: Refactor me pls. Split me up! */
+import type { ZrTypeKeyword } from "./enum";
+import { ZrNodeFlag, ZrNodeKind } from "./enum";
+import { isNode } from "./guards";
+import type {
+	ArrayIndexExpression,
+	ArrayLiteralExpression,
+	BinaryExpression,
+	BooleanLiteral,
+	CallExpression,
+	EndOfStatement,
+	EnumDeclarationStatement,
+	EnumItemExpression,
+	ExportKeyword,
+	Expression,
+	ExpressionStatement,
+	ForInStatement,
+	FunctionDeclaration,
+	FunctionExpression,
 	Identifier,
-	Option as OptionKey,
+	IfStatement,
+	InnerExpression,
+	InterpolatedStringExpression,
+	InvalidNode,
+	Node,
+	NodeError,
+	NodeTypes,
+	NumberLiteral,
+	ObjectLiteral,
 	OperatorToken,
+	Option as OptionKey,
+	OptionExpression,
+	ParameterDeclaration,
+	ParenthesizedExpression,
+	PrefixExpression,
+	PrefixToken,
+	PropertyAccessExpression,
+	PropertyAssignment,
+	RangeExpression,
+	ReturnStatement,
+	SimpleCallExpression,
+	SourceBlock,
+	SourceFile,
+	Statement,
+	StringLiteral,
+	TypeReference,
+	UnaryExpression,
+	UndefinedKeyword,
 	VariableDeclaration,
 	VariableStatement,
-	BooleanLiteral,
-	EndOfStatement,
-	InvalidNode,
-	BinaryExpression,
-	NodeError,
-	OptionExpression,
-	IfStatement,
-	ArrayLiteralExpression,
-	PropertyAccessExpression,
-	ArrayIndexExpression,
-	Statement,
-	ParenthesizedExpression,
-	FunctionDeclaration,
-	ParameterDeclaration,
-	TypeReference,
-	ForInStatement,
-	ObjectLiteral,
-	PropertyAssignment,
-	UnaryExpression,
-	CallExpression,
-	SimpleCallExpression,
-	NodeTypes,
-	Expression,
-	UndefinedKeyword,
-	ExportKeyword,
-	EnumDeclarationStatement,
-} from "./NodeTypes";
-import { isNode } from "./Guards";
+} from "./node-types";
 
-function createNode<T extends keyof NodeTypes>(kind: T) {
+function createNode<T extends keyof NodeTypes>(kind: T): Writable<NodeTypes[T & ZrNodeKind]> {
 	return {
-		kind,
 		flags: 0,
+		kind,
 	} as Writable<NodeTypes[T & ZrNodeKind]>;
 }
 
-/** @internal */
-export function updateNodeInternal<TNode extends Node>(node: TNode, props: Partial<TNode>) {
-	for (const [key, prop] of pairs(props)) {
-		/** @ts-ignore */
-		node[key] = prop;
+/**
+ * @param node
+ * @param props
+ * @internal
+ */
+export function updateNodeInternal<TNode extends Node>(node: TNode, props: Partial<TNode>): TNode {
+	for (const [key, property] of pairs(props)) {
+		/** @ts-ignore -- Seems to be acceptable. */
+		node[key] = property;
 	}
+
 	return node;
 }
 
@@ -67,21 +80,26 @@ export function createInterpolatedString(
 	return node;
 }
 
-export function createReturnStatement(expression: Expression) {
+export function createReturnStatement(expression: Expression): Writable<ReturnStatement> {
 	const node = createNode(ZrNodeKind.ReturnStatement);
 	node.expression = expression;
 	node.children = [expression];
 	return node;
 }
 
-export function createArrayLiteral(values: ArrayLiteralExpression["values"]) {
+export function createArrayLiteral(
+	values: ArrayLiteralExpression["values"],
+): Writable<ArrayLiteralExpression> {
 	const node = createNode(ZrNodeKind.ArrayLiteralExpression);
 	node.values = values;
 	node.children = values;
 	return node;
 }
 
-export function createEnumDeclaration(name: Identifier, values: EnumDeclarationStatement["values"]) {
+export function createEnumDeclaration(
+	name: Identifier,
+	values: EnumDeclarationStatement["values"],
+): Writable<EnumDeclarationStatement> {
 	const node = createNode(ZrNodeKind.EnumDeclaration);
 	node.name = name;
 	node.values = values;
@@ -89,7 +107,7 @@ export function createEnumDeclaration(name: Identifier, values: EnumDeclarationS
 	return node;
 }
 
-export function createEnumItemExpression(name: Identifier) {
+export function createEnumItemExpression(name: Identifier): Writable<EnumItemExpression> {
 	const node = createNode(ZrNodeKind.EnumItemExpression);
 	node.name = name;
 	return node;
@@ -101,19 +119,17 @@ export function withError<T extends Node>(node: T): T {
 }
 
 export function createExportKeyword(): ExportKeyword {
-	const node = createNode(ZrNodeKind.ExportKeyword);
-	return node;
+	return createNode(ZrNodeKind.ExportKeyword);
 }
 
 export function createUndefined(): UndefinedKeyword {
-	const node = createNode(ZrNodeKind.UndefinedKeyword);
-	return node;
+	return createNode(ZrNodeKind.UndefinedKeyword);
 }
 
 export function createPropertyAssignment(
 	name: PropertyAssignment["name"],
 	initializer: PropertyAssignment["initializer"],
-) {
+): Writable<PropertyAssignment> {
 	const node = createNode(ZrNodeKind.PropertyAssignment);
 	node.name = name;
 	node.initializer = initializer;
@@ -121,7 +137,7 @@ export function createPropertyAssignment(
 	return node;
 }
 
-export function createObjectLiteral(values: ObjectLiteral["values"]) {
+export function createObjectLiteral(values: ObjectLiteral["values"]): Writable<ObjectLiteral> {
 	const node = createNode(ZrNodeKind.ObjectLiteralExpression);
 	node.values = values;
 	node.children = values;
@@ -131,7 +147,7 @@ export function createObjectLiteral(values: ObjectLiteral["values"]) {
 export function createArrayIndexExpression(
 	expression: ArrayIndexExpression["expression"],
 	index: ArrayIndexExpression["index"],
-) {
+): Writable<ArrayIndexExpression> {
 	const node = createNode(ZrNodeKind.ArrayIndexExpression);
 	node.expression = expression;
 	node.index = index;
@@ -142,7 +158,7 @@ export function createArrayIndexExpression(
 export function createPropertyAccessExpression(
 	expression: PropertyAccessExpression["expression"],
 	name: PropertyAccessExpression["name"],
-) {
+): Writable<PropertyAccessExpression> {
 	const node = createNode(ZrNodeKind.PropertyAccessExpression);
 	node.expression = expression;
 	node.name = name;
@@ -152,8 +168,8 @@ export function createPropertyAccessExpression(
 
 export function createNodeError(message: string, node: Node): NodeError {
 	return {
-		node,
 		message,
+		node,
 	};
 }
 
@@ -167,20 +183,32 @@ export function createIfStatement(
 	node.thenStatement = thenStatement;
 	node.elseStatement = elseStatement;
 	node.children = [];
-	if (condition) node.children.push(condition);
-	if (thenStatement) node.children.push(thenStatement);
-	if (elseStatement) node.children.push(elseStatement);
+	if (condition) {
+		node.children.push(condition);
+	}
+
+	if (thenStatement) {
+		node.children.push(thenStatement);
+	}
+
+	if (elseStatement) {
+		node.children.push(elseStatement);
+	}
+
 	return node;
 }
 
-export function createExpressionStatement(expression: Expression) {
+export function createExpressionStatement(expression: Expression): Writable<ExpressionStatement> {
 	const node = createNode(ZrNodeKind.ExpressionStatement);
 	node.expression = expression;
 	node.children = [expression];
 	return node;
 }
 
-export function createRangeExpression(left: Expression, right: Expression) {
+export function createRangeExpression(
+	left: Expression,
+	right: Expression,
+): Writable<RangeExpression> {
 	const node = createNode(ZrNodeKind.RangeExpression);
 	node.left = left;
 	node.right = right;
@@ -191,7 +219,7 @@ export function createForInStatement(
 	initializer: ForInStatement["initializer"],
 	expression: ForInStatement["expression"] | undefined,
 	statement: ForInStatement["statement"] | undefined,
-) {
+): Writable<ForInStatement> {
 	const node = createNode(ZrNodeKind.ForInStatement);
 	node.initializer = initializer;
 	node.children = [initializer];
@@ -205,13 +233,16 @@ export function createForInStatement(
 		node.statement = statement;
 		node.children.push(statement);
 	}
+
 	return node;
 }
 
 /**
- * Flattens an interpolated string into a regular string
- * @param expression The interpolated string expression
- * @param variables The variables for identifiers etc. to flatten with
+ * Flattens an interpolated string into a regular string.
+ *
+ * @param expression - The interpolated string expression to flatten.
+ * @param variables - The variables for identifiers etc to flatten with.
+ * @returns A string literal node with the flattened interpolated string.
  */
 export function flattenInterpolatedString(
 	expression: InterpolatedStringExpression,
@@ -219,11 +250,7 @@ export function flattenInterpolatedString(
 ): StringLiteral {
 	let text = "";
 	for (const value of expression.values) {
-		if (isNode(value, ZrNodeKind.Identifier)) {
-			text += tostring(variables[value.name]);
-		} else {
-			text += value.text;
-		}
+		text += isNode(value, ZrNodeKind.Identifier) ? tostring(variables[value.name]) : value.text;
 	}
 
 	const node = createNode(ZrNodeKind.String);
@@ -231,27 +258,30 @@ export function flattenInterpolatedString(
 	return node;
 }
 
-export function createBlock(statements: Statement[]) {
+export function createBlock(statements: Array<Statement>): Writable<SourceBlock> {
 	const node = createNode(ZrNodeKind.Block);
 	node.statements = statements;
 	node.children = statements;
 	return node;
 }
 
-export function createTypeReference(typeName: TypeReference["typeName"]) {
+export function createTypeReference(typeName: TypeReference["typeName"]): TypeReference {
 	return identity<TypeReference>({
+		flags: 0,
 		kind: ZrNodeKind.TypeReference,
 		typeName,
 		children: [],
-		flags: 0,
 	});
 }
 
-export function createKeywordTypeNode(keyword: ZrTypeKeyword) {
+export function createKeywordTypeNode(keyword: ZrTypeKeyword): TypeReference {
 	return createTypeReference(createIdentifier(keyword));
 }
 
-export function createParameter(name: ParameterDeclaration["name"], typeName?: ParameterDeclaration["type"]) {
+export function createParameter(
+	name: ParameterDeclaration["name"],
+	typeName?: ParameterDeclaration["type"],
+): Writable<ParameterDeclaration> {
 	const node = createNode(ZrNodeKind.Parameter);
 	node.name = name;
 	node.type = typeName;
@@ -262,7 +292,7 @@ export function createParameter(name: ParameterDeclaration["name"], typeName?: P
 export function createFunctionExpression(
 	parameters: FunctionDeclaration["parameters"],
 	body: FunctionDeclaration["body"] | undefined,
-) {
+): Writable<FunctionExpression> {
 	const node = createNode(ZrNodeKind.FunctionExpression);
 	node.parameters = parameters;
 	node.children = [...parameters];
@@ -271,6 +301,7 @@ export function createFunctionExpression(
 		node.body = body;
 		node.children.push(body);
 	}
+
 	return node;
 }
 
@@ -278,7 +309,7 @@ export function createFunctionDeclaration(
 	name: FunctionDeclaration["name"],
 	parameters: FunctionDeclaration["parameters"],
 	body: FunctionDeclaration["body"] | undefined,
-) {
+): Writable<FunctionDeclaration> {
 	const node = createNode(ZrNodeKind.FunctionDeclaration);
 	node.name = name;
 	node.children = [name];
@@ -288,10 +319,13 @@ export function createFunctionDeclaration(
 		node.body = body;
 		node.children.push(body);
 	}
+
 	return node;
 }
 
-export function createParenthesizedExpression(expression: ParenthesizedExpression["expression"]) {
+export function createParenthesizedExpression(
+	expression: ParenthesizedExpression["expression"],
+): Writable<ParenthesizedExpression> {
 	const node = createNode(ZrNodeKind.ParenthesizedExpression);
 	node.expression = expression;
 	node.children = [expression];
@@ -318,45 +352,50 @@ export function createParenthesizedExpression(expression: ParenthesizedExpressio
 export function createSimpleCallExpression(
 	expression: SimpleCallExpression["expression"],
 	args: SimpleCallExpression["arguments"],
-	startPos?: number,
-	endPos?: number,
-) {
+	startPosition?: number,
+	endPosition?: number,
+): Writable<SimpleCallExpression> {
 	const node = createNode(ZrNodeKind.SimpleCallExpression);
 	node.expression = expression;
 	node.arguments = args;
-	node.startPos = startPos;
-	node.endPos = endPos;
+	node.startPos = startPosition;
+	node.endPos = endPosition;
 	node.children = [expression, ...args];
 	return node;
 }
 
+// eslint-disable-next-line ts/max-params -- FIXME: Possibly simplify it?
 export function createCallExpression(
 	expression: CallExpression["expression"],
 	args: CallExpression["arguments"],
 	options?: CallExpression["options"],
-	startPos?: number,
-	endPos?: number,
-) {
+	startPosition?: number,
+	endPosition?: number,
+): Writable<CallExpression> {
 	const result = createNode(ZrNodeKind.CallExpression);
 	result.expression = expression;
 	result.arguments = args;
-	result.startPos = startPos;
-	result.endPos = endPos;
+	result.startPos = startPosition;
+	result.endPos = endPosition;
 	result.options = options ?? [];
 	return result;
 }
 
-export function createInnerExpression(expression: InnerExpression["expression"], startPos?: number, endPos?: number) {
+export function createInnerExpression(
+	expression: InnerExpression["expression"],
+	startPosition?: number,
+	endPosition?: number,
+): Writable<InnerExpression> {
 	const node = createNode(ZrNodeKind.InnerExpression);
 	node.expression = expression;
-	node.startPos = startPos;
-	node.endPos = endPos;
+	node.startPos = startPosition;
+	node.endPos = endPosition;
 	node.children = [expression];
 	return node;
 }
 
 export function createPrefixToken(value: PrefixToken["value"]): PrefixToken {
-	return { kind: ZrNodeKind.PrefixToken, value, flags: 0, children: [] };
+	return { flags: 0, kind: ZrNodeKind.PrefixToken, value, children: [] };
 }
 
 export function createPrefixExpression(
@@ -370,11 +409,12 @@ export function createPrefixExpression(
 	return node;
 }
 
-export function createSourceFile(children: SourceFile["children"]) {
-	const statement: SourceFile = { kind: ZrNodeKind.Source, children, flags: 0 };
+export function createSourceFile(children: SourceFile["children"]): SourceFile {
+	const statement: SourceFile = { flags: 0, kind: ZrNodeKind.Source, children };
 	for (const child of statement.children) {
 		child.parent = statement;
 	}
+
 	return statement;
 }
 
@@ -399,12 +439,12 @@ export function createIdentifier(name: string, prefix = "$"): Identifier {
 	return node;
 }
 
-export function createOptionKey(flag: string, endPos?: number): OptionKey {
+export function createOptionKey(flag: string, endPosition?: number): OptionKey {
 	// return { kind: ZrNodeKind.OptionKey, flag, flags: 0, startPos: endPos ? endPos - flag.size() : 0, endPos };
 	const node = createNode(ZrNodeKind.OptionKey);
 	node.flag = flag;
-	node.startPos = endPos ? endPos - flag.size() : 0;
-	node.endPos = endPos;
+	node.startPos = endPosition ? endPosition - flag.size() : 0;
+	node.endPos = endPosition;
 	return node;
 }
 
@@ -420,19 +460,22 @@ export function createOptionExpression(
 	return node;
 }
 
-export function createOperator(operator: OperatorToken["operator"], startPos?: number): OperatorToken {
+export function createOperator(
+	operator: OperatorToken["operator"],
+	startPosition?: number,
+): OperatorToken {
 	return {
+		endPos: (startPosition ?? 0) + operator.size() - 1,
+		flags: 0,
 		kind: ZrNodeKind.OperatorToken,
 		operator,
-		flags: 0,
+		startPos: startPosition,
 		children: [],
-		startPos,
-		endPos: (startPos ?? 0) + operator.size() - 1,
 	};
 }
 
 export function createVariableDeclaration(
-	identifier: Identifier | PropertyAccessExpression | ArrayIndexExpression,
+	identifier: ArrayIndexExpression | Identifier | PropertyAccessExpression,
 	expression: VariableDeclaration["expression"],
 ): VariableDeclaration {
 	const node = createNode(ZrNodeKind.VariableDeclaration);
@@ -463,39 +506,40 @@ export function createBooleanNode(value: boolean): BooleanLiteral {
 }
 
 export function createEndOfStatementNode(): EndOfStatement {
-	return { kind: ZrNodeKind.EndOfStatement, flags: 0, children: [] };
+	return { flags: 0, kind: ZrNodeKind.EndOfStatement, children: [] };
 }
 
 export function createInvalidNode(
 	message: InvalidNode["message"],
 	expression: Node,
-	startPos?: number,
-	endPos?: number,
+	startPosition?: number,
+	endPosition?: number,
 ): InvalidNode {
 	return {
-		kind: ZrNodeKind.Invalid,
+		endPos: endPosition ?? expression.endPos,
 		expression,
-		message,
 		flags: ZrNodeFlag.NodeHasError,
+		kind: ZrNodeKind.Invalid,
+		message,
+		startPos: startPosition ?? expression.startPos,
 		children: [],
-		startPos: startPos ?? expression.startPos,
-		endPos: endPos ?? expression.endPos,
 	};
 }
 
+// eslint-disable-next-line ts/max-params -- FIXME: Possibly simplify it?
 export function createBinaryExpression(
 	left: Expression,
 	op: string,
 	right: Expression,
-	startPos?: number,
-	endPos?: number,
+	startPosition?: number,
+	endPosition?: number,
 ): BinaryExpression {
 	const node = createNode(ZrNodeKind.BinaryExpression);
 	node.left = left;
 	node.operator = op;
 	node.right = right;
-	node.startPos = startPos;
-	node.endPos = endPos;
+	node.startPos = startPosition;
+	node.endPos = endPosition;
 
 	left.parent = node;
 	right.parent = node;
@@ -503,12 +547,17 @@ export function createBinaryExpression(
 	return node;
 }
 
-export function createUnaryExpression(op: string, expression: Node, startPos?: number, endPos?: number) {
+export function createUnaryExpression(
+	op: string,
+	expression: Node,
+	startPosition?: number,
+	endPosition?: number,
+): Writable<UnaryExpression> {
 	const node = createNode(ZrNodeKind.UnaryExpression);
 	node.expression = expression;
 	node.operator = op;
-	node.startPos = startPos;
-	node.endPos = endPos;
+	node.startPos = startPosition;
+	node.endPos = endPosition;
 	node.parent = expression;
 	node.children = [expression];
 	return node;

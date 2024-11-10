@@ -1,4 +1,4 @@
-import { ZrNodeKind, ZrNodeFlag } from "./Enum";
+import { ZrNodeKind, ZrNodeFlag } from "./enum";
 import {
 	isNode,
 	isNodeIn,
@@ -7,9 +7,9 @@ import {
 	isValidPrefixCharacter,
 	getNodesOfType,
 	hasNodeFlag,
-} from "./Guards";
-import * as typeGuards from "./Guards";
-import { getKindName, getNodeKindName } from "./Functions";
+} from "./guards";
+import * as typeGuards from "./guards";
+import { getKindName, getNodeKindName } from "./functions";
 export {
 	ZrNodeKind as CmdSyntaxKind,
 	ZrNodeKind,

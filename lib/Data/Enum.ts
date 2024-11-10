@@ -1,55 +1,62 @@
-import { ZrEnumItem } from "./EnumItem";
+import { ZrEnumItem } from "./enum-item";
 
-/**
- * The built-in Enum type in Zirconium
- */
+/** The built-in Enum type in Zirconium. */
 export class ZrEnum {
-	private items = new Array<ZrEnumItem>();
+	private readonly items = new Array<ZrEnumItem>();
 
 	/**
-	 * @param items The item labels
-	 * @param name The name of this enum
-	 * @param enumFactory A custom enum item factory
+	 * Creates a ZrEnum.
+	 *
+	 * @param items - The item labels.
+	 * @param name - The name of this enum object.
+	 * @param enumFactory - A custom enum item factory.
 	 */
 	protected constructor(
-		items: readonly string[],
-		private name = "[ZrEnum]",
+		items: ReadonlyArray<string>,
+		private readonly name = "[ZrEnum]",
 		/**
-		 * Mainly for Zircon to override with a child enum type -
+		 * Mainly for Zircon to override with a child enum type.
+		 *
+		 * @param value - Enum value.
+		 * @param index - Enum index.
+		 * @returns A new ZrEnum.
 		 */
-		enumFactory: (value: string, index: number) => ZrEnumItem = (value, index) =>
-			new ZrEnumItem(this, index, value),
+		enumFactory: (value: string, index: number) => ZrEnumItem = (value, index) => {
+			return new ZrEnumItem(this, index, value);
+		},
 	) {
 		this.items = items.map(enumFactory);
 	}
 
 	/**
-	 * Creates an enum from an array of strings - where the strings will be the values of the enum
-	 * @param name The name of the enum
-	 * @param items The items in this enum
-	 * @returns The enum
+	 * Creates an enum from an array of strings - where the strings will be the
+	 * values of the enum.
+	 *
+	 * @param name - The name of the enum object.
+	 * @param items - The items in this enum.
+	 * @returns The enum object.
 	 */
-	public static fromArray(name: string, items: string[]) {
+	public static fromArray(name: string, items: Array<string>): ZrEnum {
 		return new ZrEnum(items, name);
 	}
 
-	public getEnumName() {
+	public getEnumName(): string {
 		return this.name;
 	}
 
-	public getItemByName(name: string) {
-		return this.items.find((f) => f.getName() === name);
+	public getItemByName(name: string): undefined | ZrEnumItem {
+		return this.items.find(item => item.getName() === name);
 	}
 
-	public getItemByIndex(idx: number) {
-		return this.items.find((f) => f.getValue() === idx);
+	public getItemByIndex(index: number): undefined | ZrEnumItem {
+		return this.items.find(item => item.getValue() === index);
 	}
 
-	public getItems() {
-		return this.items as readonly ZrEnumItem[];
+	public getItems(): ReadonlyArray<ZrEnumItem> {
+		return this.items as ReadonlyArray<ZrEnumItem>;
 	}
 
-	public toString() {
+	public toString(): string {
 		return `enum@${this.name}`;
 	}
 }

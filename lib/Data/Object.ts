@@ -1,22 +1,21 @@
-import { ZrIsUndefined } from "./Helpers";
-import { ZrValue } from "./Locals";
+import { ZrIsUndefined } from "./helpers";
+import type { ZrValue } from "./locals";
 import ZrUndefined from "./Undefined";
 
-/**
- * A zirconium object
- */
+/** A zirconium object. */
 export default class ZrObject {
-	private map = new Map<string, ZrValue>();
+	private readonly map = new Map<string, ZrValue>();
 
-	public static fromRecord(record: Record<string, ZrValue>) {
-		const obj = new ZrObject();
+	public static fromRecord(record: Record<string, ZrValue>): ZrObject {
+		const object = new ZrObject();
 		for (const [key, value] of pairs(record)) {
-			obj.set(key, value);
+			object.set(key, value);
 		}
-		return obj;
+
+		return object;
 	}
 
-	public set(name: string, value: ZrValue | ZrUndefined) {
+	public set(name: string, value: ZrUndefined | ZrValue): void {
 		if (ZrIsUndefined(value)) {
 			this.map.delete(name);
 		} else {
@@ -24,19 +23,20 @@ export default class ZrObject {
 		}
 	}
 
-	public get(name: string) {
+	public get(name: string): typeof ZrUndefined | ZrValue {
 		return this.map.get(name) ?? ZrUndefined;
 	}
 
-	public toString() {
+	public toString(): string {
 		const str = new Array<string>();
 		for (const [key, value] of this.map) {
 			str.push(`${key}: ${value}`);
 		}
+
 		return `{${str.join(", ") || " "}}`;
 	}
 
-	public toMap() {
+	public toMap(): ReadonlyMap<string, Exclude<ZrValue, ZrUndefined>> {
 		return this.map as ReadonlyMap<string, Exclude<ZrValue, ZrUndefined>>;
 	}
 }

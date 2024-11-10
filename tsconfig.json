@@ -1,42 +1,35 @@
 {
 	"compilerOptions": {
-		// required
-		"allowSyntheticDefaultImports": true,
-		"downlevelIteration": true,
-        "noLib": true,
-		"strict": true,
 		"target": "ESNext",
-		"moduleResolution": "Node",
-		"typeRoots": ["node_modules/@rbxts"],
-		"resolveJsonModule": true,
-		"module": "commonjs",
-		"stripInternal": true,
-
-		// required, configurable
-		"rootDir": "lib",
-		"outDir": "out",
-
-		// optional
-		"baseUrl": "lib",
-		"declaration": true,
-
-		// optional, non-configurable
 		"jsx": "react",
 		"jsxFactory": "Roact.createElement",
+		"noLib": true,
+		"baseUrl": "lib",
+		"rootDir": "lib",
+		"module": "commonjs",
+		"moduleResolution": "Node",
+		"resolveJsonModule": true,
+		"typeRoots": ["node_modules/@rbxts"],
+		"strict": true,
+		"declaration": true,
+		"downlevelIteration": true,
+		"outDir": "out",
+		"stripInternal": true,
+		"allowSyntheticDefaultImports": true,
 		"plugins": [
 			{
-			  "transform": "rbxts-transform-debug",
-			  "verbose": true,
-			  "enabled": true,
-			  "environmentRequires": {
-				"NODE_ENV": "development"
-			  }
+				"transform": "rbxts-transform-debug",
+				"verbose": true,
+				"enabled": true,
+				"environmentRequires": {
+					"NODE_ENV": "development"
+				}
 			}
-		  ]
+		]
 	},
 	"exclude": [
 		"eslint.config.ts",
 		"example/**/*",
-        "out"
+		"out"
 	]
 }

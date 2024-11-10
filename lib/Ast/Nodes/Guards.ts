@@ -1,97 +1,110 @@
-import {
-	NodeTypes,
-	Node,
-	VALID_PREFIX_CHARS,
-	VariableStatement,
-	StringLiteral,
-	InvalidNode,
-	SourceFile,
-	PrefixToken,
-	OperatorToken,
-	Identifier,
-	Option,
-	InterpolatedStringExpression,
-	NumberLiteral,
-	BooleanLiteral,
-	BinaryExpression,
-	ExpressionStatement,
-	CallExpression,
-	SimpleCallExpression,
-	OptionExpression,
+import type { ZrNodeFlag } from "./enum";
+import { ZrNodeKind } from "./enum";
+import { getKindName, getNodeKindName } from "./functions";
+import type {
 	ArrayIndexExpression,
 	ArrayLiteralExpression,
+	BinaryExpression,
+	BooleanLiteral,
+	CallExpression,
+	ExportKeyword,
+	ExpressionStatement,
+	ForInStatement,
 	FunctionDeclaration,
 	FunctionExpression,
-	ForInStatement,
-	PropertyAccessExpression,
-	ReturnStatement,
-	ParameterDeclaration,
+	Identifier,
+	InterpolatedStringExpression,
+	InvalidNode,
+	Node,
+	NodeTypes,
+	NumberLiteral,
 	ObjectLiteral,
-	ExportKeyword,
-	UndefinedKeyword,
-	PropertyAssignment,
-	UnaryExpression,
+	OperatorToken,
+	Option,
+	OptionExpression,
+	ParameterDeclaration,
 	ParenthesizedExpression,
-	VariableDeclaration,
+	PrefixToken,
+	PropertyAccessExpression,
+	PropertyAssignment,
+	ReturnStatement,
+	SimpleCallExpression,
 	SourceBlock,
-} from "./NodeTypes";
-import { ZrNodeFlag, ZrNodeKind } from "./Enum";
-import { getKindName, getNodeKindName } from "./Functions";
+	SourceFile,
+	StringLiteral,
+	UnaryExpression,
+	UndefinedKeyword,
+	VariableDeclaration,
+	VariableStatement,
+} from "./node-types";
+import { VALID_PREFIX_CHARS } from "./node-types";
 
 export function isNode<K extends keyof NodeTypes>(node: Node, typeName: K): node is NodeTypes[K] {
 	return node !== undefined && node.kind === typeName;
 }
 
-export function hasNodeFlag<F extends ZrNodeFlag>(node: Node, flag: F) {
+export function hasNodeFlag<F extends ZrNodeFlag>(node: Node, flag: F): boolean {
 	return node.flags !== undefined && (node.flags & flag) !== 0;
 }
 
-export function assertIsNode<K extends keyof NodeTypes>(node: Node, typeName: K): asserts node is NodeTypes[K] {
+export function assertIsNode<K extends keyof NodeTypes>(
+	node: Node,
+	typeName: K,
+): asserts node is NodeTypes[K] {
 	if (!isNode(node, typeName)) {
 		error(`Expected ${getKindName(typeName)}, got ${getNodeKindName(node)}`);
 	}
 }
 
-export function getNodesOfType<K extends keyof NodeTypes>(nodes: Node[], typeName: K): Array<NodeTypes[K]> {
+export function getNodesOfType<K extends keyof NodeTypes>(
+	nodes: Array<Node>,
+	typeName: K,
+): Array<NodeTypes[K]> {
 	return nodes.filter((node): node is NodeTypes[K] => isNode(node, typeName));
 }
 
-export function getSiblingNode(nodes: Node[], kind: ZrNodeKind) {
-	return nodes.find((f) => f.kind === kind);
+export function getSiblingNode(nodes: Array<Node>, kind: ZrNodeKind): Node | undefined {
+	return nodes.find(node => node.kind === kind);
 }
 
-export function isNodeIn<K extends keyof NodeTypes>(node: Node, typeName: readonly K[]): node is NodeTypes[K] {
+export function isNodeIn<K extends keyof NodeTypes>(
+	node: Node,
+	typeName: ReadonlyArray<K>,
+): node is NodeTypes[K] {
 	return node !== undefined && (typeName as ReadonlyArray<ZrNodeKind>).includes(node.kind);
 }
 
-export function isValidPrefixCharacter(input: string): input is typeof VALID_PREFIX_CHARS[number] {
-	return VALID_PREFIX_CHARS.includes(input as typeof VALID_PREFIX_CHARS[number]);
+export function isValidPrefixCharacter(
+	input: string,
+): input is (typeof VALID_PREFIX_CHARS)[number] {
+	return VALID_PREFIX_CHARS.includes(input as (typeof VALID_PREFIX_CHARS)[number]);
 }
 
-/**
- * @internal
- */
-export const VALID_VARIABLE_NAME = "^[A-Za-z_][A-Za-z0-9_]*$"; // matches $A, $a, $a0, $_a, $A_, $A_a, etc.
-/**
- * @internal
- */
+/** @internal */
+// matches $A, $a, $a0, $_a, $A_, $A_a, etc.
+export const VALID_VARIABLE_NAME = "^[A-Za-z_][A-Za-z0-9_]*$";
+/** @internal */
 export const VALID_COMMAND_NAME = "^[A-Za-z][A-Z0-9a-z_%-]*$";
 
-/**
- * @internal
- */
-const PREFIXABLE = [ZrNodeKind.String, ZrNodeKind.InterpolatedString, ZrNodeKind.Number, ZrNodeKind.Boolean] as const;
+/** @internal */
+const PREFIXABLE = [
+	ZrNodeKind.String,
+	ZrNodeKind.InterpolatedString,
+	ZrNodeKind.Number,
+	ZrNodeKind.Boolean,
+] as const;
 
 /**
  * Can this expression be prefixed?
+ *
+ * @param node - The node to check.
+ * @returns A boolean saying if this is expression can be prefixed or not.
  */
-export function isPrefixableExpression(node: Node): node is NodeTypes[typeof PREFIXABLE[number]] {
+export function isPrefixableExpression(node: Node): node is NodeTypes[(typeof PREFIXABLE)[number]] {
 	return isNodeIn(node, PREFIXABLE);
 }
 
-/**
- * @internal
- */
+/** @internal */
 export const ASSIGNABLE = [
 	ZrNodeKind.String,
 	ZrNodeKind.InterpolatedString,
@@ -111,18 +124,19 @@ export const ASSIGNABLE = [
 	ZrNodeKind.FunctionExpression,
 	ZrNodeKind.ParenthesizedExpression,
 ] as const;
-export type AssignableExpression = NodeTypes[typeof ASSIGNABLE[number]];
+export type AssignableExpression = NodeTypes[(typeof ASSIGNABLE)[number]];
 
 /**
  * Can this expression be prefixed?
+ *
+ * @param node - The node to check.
+ * @returns A boolean saying if this is an assignable expression or not.
  */
 export function isAssignableExpression(node: Node): node is AssignableExpression {
 	return isNodeIn(node, ASSIGNABLE);
 }
 
-/**
- * @internal
- */
+/** @internal */
 const LIT = [
 	ZrNodeKind.String,
 	ZrNodeKind.InterpolatedString,
@@ -130,7 +144,7 @@ const LIT = [
 	ZrNodeKind.Number,
 	ZrNodeKind.Boolean,
 ] as const;
-export type LiteralExpression = NodeTypes[typeof LIT[number]];
+export type LiteralExpression = NodeTypes[(typeof LIT)[number]];
 
 const EXPRESSIONABLE = [ZrNodeKind.VariableStatement, ZrNodeKind.BinaryExpression] as const;
 
@@ -147,13 +161,22 @@ export function isParameterDeclaration(node: Node): node is ParameterDeclaration
 
 // REGION Expressions
 
-/** @deprecated */
-export function isValidExpression(node: Node): node is NodeTypes[typeof EXPRESSIONABLE[number]] {
+/**
+ * Returns if this is a valid expression.
+ *
+ * @deprecated
+ * @param node - The node to check.
+ * @returns A boolean saying if this node is valid.
+ */
+export function isValidExpression(node: Node): node is NodeTypes[(typeof EXPRESSIONABLE)[number]] {
 	return isNodeIn(node, EXPRESSIONABLE);
 }
 
 /**
  * Is this expression considered a primitive type?
+ *
+ * @param node - The node to check.
+ * @returns A boolean saying if this is a primitive expression or not.
  */
 export function isPrimitiveExpression(node: Node): node is LiteralExpression {
 	return isNodeIn(node, ASSIGNABLE);
@@ -227,8 +250,13 @@ export function isForInStatement(node: Node): node is ForInStatement {
 	return node !== undefined && node.kind === ZrNodeKind.ForInStatement;
 }
 
-export function isStringExpression(node: Node): node is StringLiteral | InterpolatedStringExpression {
-	return node !== undefined && (node.kind === ZrNodeKind.String || node.kind === ZrNodeKind.InterpolatedString);
+export function isStringExpression(
+	node: Node,
+): node is InterpolatedStringExpression | StringLiteral {
+	return (
+		node !== undefined &&
+		(node.kind === ZrNodeKind.String || node.kind === ZrNodeKind.InterpolatedString)
+	);
 }
 
 // REGION function checks
@@ -267,7 +295,13 @@ export function isStringLiteral(node: Node): node is StringLiteral {
 	return node !== undefined && node.kind === ZrNodeKind.String;
 }
 
-/** @deprecated */
+/**
+ * Returns true if the node is a prefix node kind.
+ *
+ * @deprecated
+ * @param node - Node to check.
+ * @returns A boolean if this is a prefix or not.
+ */
 export function isPrefixToken(node: Node): node is PrefixToken {
 	return node !== undefined && node.kind === ZrNodeKind.PrefixToken;
 }
@@ -284,7 +318,13 @@ export function isOptionKey(node: Node): node is Option {
 	return node !== undefined && node.kind === ZrNodeKind.OptionKey;
 }
 
-/** @deprecated */
+/**
+ * Returns true if the node is an invalid node kind.
+ *
+ * @deprecated
+ * @param node - Node to check.
+ * @returns A boolean if this is invalid or not.
+ */
 export function isInvalid(node: Node): node is InvalidNode {
 	return node !== undefined && node.kind === ZrNodeKind.Invalid;
 }

@@ -1,5 +1,6 @@
-import { isNode, ZrNodeKind } from "../Ast/Nodes";
-import { Node, NodeTypes, SourceFile } from "../Ast/Nodes/NodeTypes";
+// eslint-disable-next-line max-classes-per-file -- FIXME: Refactor into multiple files.
+import { isNode, ZrNodeKind } from "../Ast/nodes";
+import type { Node, SourceFile } from "../Ast/nodes/node-types";
 
 export interface ZrBinder {
 	// TODO
@@ -39,41 +40,46 @@ type ZrSymbols = ZrSymbolMap[keyof ZrSymbolMap];
 
 export class ZrSymbolTable {
 	public symbols = new Array<ZrSymbols>();
-	public hasSymbolById(symbolId: string) {
-		return this.symbols.find((f) => f.name === symbolId);
+	public hasSymbolById(symbolId: string): undefined | ZrSymbols {
+		return this.symbols.find(symbol => symbol.name === symbolId);
 	}
-	public addSymbol(symbol: ZrSymbols) {}
+
+	public addSymbol(symbol: ZrSymbols): void {
+		throw "no impl";
+	}
 }
 
 /** @internal */
 export class ZrBinder implements ZrBinder {
-	private symbolMap = new Array<ZrSymbols>();
-	private symbolStack = new Array<ZrSymbols>();
-	private currentSymbol: ZrSymbols;
+	private readonly currentSymbol: ZrSymbols;
+	private readonly symbolMap = new Array<ZrSymbols>();
+	private readonly symbolStack = new Array<ZrSymbols>();
 
-	public constructor(private source: SourceFile) {
+	constructor(private readonly source: SourceFile) {
 		this.currentSymbol = {
-			kind: ZrSymbolKind.Source,
 			name: "<source>",
+			kind: ZrSymbolKind.Source,
 		};
 		this.symbolStack.push(this.currentSymbol);
 	}
 
-	private getSymbolNameFor(node: Node) {
+	private getSymbolNameFor(node: Node): string | undefined {
 		if (isNode(node, ZrNodeKind.Identifier)) {
 			return "id:" + node.name;
 		}
 	}
 
-	public bindNode(node: Node, parentSymbol?: ZrSymbols) {
+	public bindNode(node: Node, _parentSymbol?: ZrSymbols): void {
 		if (isNode(node, ZrNodeKind.Source)) {
 			for (const child of node.children) {
 				this.bindNode(child);
 			}
 		} else if (isNode(node, ZrNodeKind.VariableDeclaration)) {
-			const id = this.getSymbolNameFor(node);
+			const _id = this.getSymbolNameFor(node);
 		}
 	}
 
-	public bind() {}
+	public bind(): void {
+		throw "no impl";
+	}
 }

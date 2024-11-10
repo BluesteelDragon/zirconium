@@ -1,34 +1,36 @@
-import { Result, unit, UnitType } from "@rbxts/rust-classes";
-import { isNode, ZrNodeKind } from "../Ast/Nodes";
-import { InterpolatedStringExpression } from "../Ast/Nodes/NodeTypes";
-import { ZrEnum } from "./Enum";
-import { ZrEnumItem } from "./EnumItem";
-import ZrLuauFunction from "./LuauFunction";
-import ZrObject from "./Object";
-import ZrRange from "./Range";
+import { Result } from "@rbxts/rust-classes";
+
+import { isNode, ZrNodeKind } from "../Ast/nodes";
+import type { InterpolatedStringExpression } from "../Ast/nodes/node-types";
+import type { ZrEnum } from "./enum";
+import type { ZrEnumItem } from "./enum-item";
+import ZrLuauFunction from "./luau-function";
+import type ZrObject from "./object";
+import type ZrRange from "./range";
 import ZrUndefined from "./Undefined";
-import { ZrUserdata } from "./Userdata";
-import ZrUserFunction from "./UserFunction";
+import type ZrUserFunction from "./user-function";
+import type { ZrUserdata } from "./userdata";
 
 export type ZrValue =
+	| Array<ZrValue>
+	| boolean
+	| Map<string, ZrValue>
 	| number
 	| string
-	| boolean
-	| ZrObject
-	| Array<ZrValue>
-	| Map<string, ZrValue>
-	| ZrUserFunction
-	| ZrLuauFunction
 	| ZrEnum
 	| ZrEnumItem
-	| ZrUserdata<defined> | ZrRange;
+	| ZrLuauFunction
+	| ZrObject
+	| ZrRange
+	| ZrUserdata<defined>
+	| ZrUserFunction;
 
 export const enum StackValueType {
 	Constant,
 	Function,
 }
 
-type StackValue = [value: ZrValue | ZrUndefined, constant?: boolean, exports?: StackValueType];
+type StackValue = [value: ZrUndefined | ZrValue, constant?: boolean, exports?: StackValueType];
 
 export const enum StackValueAssignmentError {
 	ReassignConstant,
@@ -36,54 +38,74 @@ export const enum StackValueAssignmentError {
 }
 
 export default class ZrLocalStack {
-	private locals = new Array<Map<string, StackValue>>();
+	private readonly locals = new Array<Map<string, StackValue>>();
 
 	constructor(inject?: ReadonlyMap<string, ZrValue>) {
-		if (inject) {
-			const newLocals = new Map<string, StackValue>();
-			for (const [name, value] of pairs(inject)) {
-				newLocals.set(name, [value, value instanceof ZrLuauFunction]);
-			}
-			this.locals.push(newLocals);
+		if (inject === undefined) {
+			return;
 		}
+
+		const newLocals = new Map<string, StackValue>();
+		for (const [name, value] of pairs(inject)) {
+			newLocals.set(name, [value, value instanceof ZrLuauFunction]);
+		}
+
+		this.locals.push(newLocals);
 	}
 
-	public print() {
+	public print(): void {
 		print("=== stack ===");
-		for (const [i, localStack] of ipairs(this.locals)) {
-			for (const [k, v] of localStack) {
-				print("░".rep(i - 1), k, v);
+		for (const [index, localStack] of ipairs(this.locals)) {
+			for (const [key, value] of localStack) {
+				print("░".rep(index - 1), key, value);
 			}
 		}
+
 		print("=== end stack ===");
 	}
 
-	private current() {
+	private current(): Map<string, StackValue> {
 		return this.locals[this.locals.size() - 1];
 	}
 
 	/**
-	 * Will set the value on the first stack
+	 * Will set the value on the first stack.
+	 *
+	 * @param name
+	 * @param value
+	 * @param constant
 	 * @internal
 	 */
-	public setGlobal(name: string, value: ZrValue, constant?: boolean) {
+	public setGlobal(name: string, value: ZrValue, constant?: boolean): void {
 		const first = this.locals[0];
 		first.set(name, [value, constant]);
 	}
 
 	/**
-	 * Gets the specified global
+	 * Gets the specified global.
+	 *
+	 * @param name
+	 * @returns
 	 */
-	public getGlobal(name: string) {
+	public getGlobal(name: string): StackValue | undefined {
 		const first = this.locals[0];
 		return first.get(name);
 	}
 
 	/**
-	 * Will set the value at the stack it was first declared
+	 * Will set the value at the stack it was first declared.
+	 *
+	 * @param name
+	 * @param value
+	 * @param constant
+	 * @returns
 	 * @internal
 	 */
-	public setUpValueOrLocal(name: string, value: ZrValue | ZrUndefined | undefined, constant?: boolean): Result<ZrValue | ZrUndefined, StackValueAssignmentError> {
+	public setUpValueOrLocal(
+		name: string,
+		value: undefined | ZrUndefined | ZrValue,
+		constant?: boolean,
+	): Result<ZrUndefined | ZrValue, StackValueAssignmentError> {
 		const stack = this.getUpValueStack(name) ?? this.current();
 		const stackValue = stack.get(name);
 		if (stackValue) {
@@ -93,34 +115,41 @@ export default class ZrLocalStack {
 			}
 		}
 
-		if (value !== undefined && value  !== ZrUndefined) {
+		if (value !== undefined && value !== ZrUndefined) {
 			stack.set(name, [value, constant]);
 			return Result.ok(value);
-		} else {
-			stack.delete(name);
-			return Result.ok(ZrUndefined);
 		}
+
+		stack.delete(name);
+		return Result.ok(ZrUndefined);
 	}
 
-	public setUpValueOrLocalIfDefined(name: string, value: ZrValue | ZrUndefined | undefined): Result<ZrValue | ZrUndefined, StackValueAssignmentError> {
+	public setUpValueOrLocalIfDefined(
+		name: string,
+		value: undefined | ZrUndefined | ZrValue,
+	): Result<ZrUndefined | ZrValue, StackValueAssignmentError> {
 		const stack = this.getUpValueStack(name) ?? this.current();
 		const existingValue = stack.get(name);
 		if (existingValue !== undefined) {
 			if (value === ZrUndefined || value === undefined) {
 				return this.setUpValueOrLocal(name, ZrUndefined);
-			} else {
-				return this.setUpValueOrLocal(name, value);
 			}
-		} else {
-			return Result.err(StackValueAssignmentError.VariableNotDeclared);
+
+			return this.setUpValueOrLocal(name, value);
 		}
+
+		return Result.err(StackValueAssignmentError.VariableNotDeclared);
 	}
 
 	/**
-	 * Will set the value on the last stack
+	 * Will set the value on the last stack.
+	 *
+	 * @param name
+	 * @param value
+	 * @param constant
 	 * @internal
 	 */
-	public setLocal(name: string, value: ZrValue | undefined, constant?: boolean) {
+	public setLocal(name: string, value: undefined | ZrValue, constant?: boolean): void {
 		const last = this.current();
 		if (value === undefined) {
 			last.set(name, [ZrUndefined, constant]);
@@ -130,56 +159,83 @@ export default class ZrLocalStack {
 	}
 
 	/**
-	 * Gets the stack (if any) the local is declared at
+	 * Gets the stack (if any) the local is declared at.
+	 *
+	 * @param name
+	 * @returns
 	 * @internal
 	 */
-	private getUpValueStack(name: string) {
-		for (const currentLocals of this.locals) if (currentLocals.has(name)) return currentLocals;
+	private getUpValueStack(name: string): Map<string, StackValue> | undefined {
+		for (const currentLocals of this.locals) {
+			if (currentLocals.has(name)) {
+				return currentLocals;
+			}
+		}
 	}
 
 	/**
-	 * Gets the value of a local (or the upvalue if it's not local to this stack)
+	 * Gets the value of a local (or the upvalue if it's not local to this
+	 * stack).
+	 *
+	 * @param name
+	 * @returns
 	 * @internal
 	 */
-	public getLocalOrUpValue(name: string) {
-		for (let i = this.locals.size() - 1; i >= 0; i--) {
-			const stack = this.locals[i];
+	public getLocalOrUpValue(name: string): StackValue | undefined {
+		for (let index = this.locals.size() - 1; index >= 0; index--) {
+			const stack = this.locals[index];
 			if (stack.has(name)) {
 				return stack.get(name);
 			}
 		}
 
-		return undefined;
+		return;
 	}
 
-	/** @internal */
-	public pop() {
+	/**
+	 * Pops a value from the stack.
+	 *
+	 * @returns
+	 * @internal
+	 */
+	public pop(): Map<string, StackValue> | undefined {
 		return this.locals.pop();
 	}
 
-	/** @internal */
-	public push() {
+	/**
+	 * Pushes a value into the stack.
+	 *
+	 * @internal
+	 */
+	public push(): void {
 		this.locals.push(new Map<string, StackValue>());
 	}
 
-	public toMap() {
-		const map = new Map<string, ZrValue | ZrUndefined>();
+	public toMap(): ReadonlyMap<string, ZrValue> {
+		const map = new Map<string, ZrUndefined | ZrValue>();
 		for (const currentLocals of this.locals) {
-			currentLocals.forEach((v, k) => map.set(k, v[0]));
+			currentLocals.forEach((value, key) => map.set(key, value[0]));
 		}
+
 		return map as ReadonlyMap<string, ZrValue>;
 	}
 
-	/** @internal */
+	/**
+	 * Evaluates an interpolated string expression and returns the interpolated
+	 * value.
+	 *
+	 * @param expression
+	 * @returns
+	 * @internal
+	 */
 	public evaluateInterpolatedString(expression: InterpolatedStringExpression): string {
 		let text = "";
 		for (const value of expression.values) {
-			if (isNode(value, ZrNodeKind.Identifier)) {
-				text += tostring(this.getLocalOrUpValue(value.name) ?? "");
-			} else {
-				text += value.text;
-			}
+			text += isNode(value, ZrNodeKind.Identifier)
+				? tostring(this.getLocalOrUpValue(value.name) ?? "")
+				: value.text;
 		}
+
 		return text;
 	}
 }

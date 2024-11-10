@@ -1,40 +1,44 @@
-import { isNode, ZrNodeKind } from "../Ast/Nodes";
-import { getFriendlyName } from "../Ast/Nodes/Functions";
-import {
+/* eslint-disable max-lines -- FIXME: Try to split this up a bit. */
+import { ZrNodeFlag } from "Ast/nodes/enum";
+import { ZrEnum } from "data/enum";
+import { ZrEnumItem } from "data/enum-item";
+import ZrRange from "data/range";
+import { $print } from "rbxts-transform-debug";
+
+import { types } from "../Ast";
+import { isNode, ZrNodeKind } from "../Ast/nodes";
+import { getFriendlyName } from "../Ast/nodes/functions";
+import type {
 	ArrayIndexExpression,
 	ArrayLiteralExpression,
 	BinaryExpression,
-	SourceFile,
 	CallExpression,
-	SimpleCallExpression,
+	EnumDeclarationStatement,
 	ForInStatement,
 	FunctionDeclaration,
+	FunctionExpression,
+	Identifier,
 	IfStatement,
 	Node,
 	ObjectLiteral,
-	PropertyAccessExpression,
-	SourceBlock,
-	VariableDeclaration,
 	OptionExpression,
-	FunctionExpression,
-	Identifier,
-	EnumDeclarationStatement,
-} from "../Ast/Nodes/NodeTypes";
-import ZrObject from "../Data/Object";
-import ZrLocalStack, { StackValueAssignmentError, ZrValue } from "../Data/Locals";
-import { isArray, isMap } from "../Util";
-import ZrUserFunction from "../Data/UserFunction";
-import ZrLuauFunction from "../Data/LuauFunction";
-import ZrContext from "../Data/Context";
-import { types } from "../Ast";
-import { InferUserdataKeys, ZrInstanceUserdata, ZrUserdata } from "../Data/Userdata";
-import ZrUndefined from "../Data/Undefined";
-import { ZrInputStream, ZrOutputStream } from "../Data/Stream";
-import { ZrNodeFlag } from "Ast/Nodes/Enum";
-import ZrRange from "Data/Range";
-import { ZrEnum } from "Data/Enum";
-import { ZrEnumItem } from "Data/EnumItem";
-import { $print } from "rbxts-transform-debug";
+	PropertyAccessExpression,
+	SimpleCallExpression,
+	SourceBlock,
+	SourceFile,
+	VariableDeclaration,
+} from "../Ast/nodes/node-types";
+import ZrContext from "../data/context";
+import type { ZrValue } from "../data/locals";
+import ZrLocalStack, { StackValueAssignmentError } from "../data/locals";
+import ZrLuauFunction from "../data/luau-function";
+import ZrObject from "../data/object";
+import { ZrInputStream, ZrOutputStream } from "../data/stream";
+import ZrUndefined from "../data/Undefined";
+import type { InferUserdataKeys } from "../data/userdata";
+import { ZrUserdata } from "../data/userdata";
+import ZrUserFunction from "../data/user-function";
+import { isArray, isMap } from "../util";
 
 export enum ZrRuntimeErrorCode {
 	NodeValueError,
@@ -57,43 +61,44 @@ export enum ZrRuntimeErrorCode {
 	UnassignedVariable,
 }
 export interface ZrRuntimeError {
-	message: string;
 	code: ZrRuntimeErrorCode;
+	message: string;
 	node?: Node;
 }
 
-const getTypeName = (value: ZrValue | ZrUndefined) => {
+function getTypeName(
+	value: ZrUndefined | ZrValue,
+): "Array" | "Object" | "undefined" | keyof CheckableTypes {
 	if (isArray(value)) {
 		return "Array";
 	} else if (value instanceof ZrObject) {
 		return "Object";
 	} else if (value === ZrUndefined) {
 		return "undefined";
-	} else {
-		return typeOf(value);
 	}
-};
 
-/**
- * Handles a block
- */
+	return typeOf(value);
+}
+
+/** Handles a block. */
 export default class ZrRuntime {
+	private readonly context: ZrContext;
+	private readonly errors = new Array<ZrRuntimeError>();
+	private readonly functions = new Map<string, ZrLuauFunction>();
 	private level = 0;
-	private errors = new Array<ZrRuntimeError>();
-	private functions = new Map<string, ZrLuauFunction>();
-	private context: ZrContext;
-	public constructor(
-		private source: SourceFile | SourceBlock,
-		private locals = new ZrLocalStack(),
-		private executingPlayer?: Player,
+
+	constructor(
+		private readonly source: SourceBlock | SourceFile,
+		private readonly locals = new ZrLocalStack(),
+		private readonly executingPlayer?: Player,
 	) {
 		this.context = new ZrContext(this);
 	}
 
 	private runtimeError(message: string, code: ZrRuntimeErrorCode, node?: Node): never {
 		const err = identity<ZrRuntimeError>({
-			message,
 			code,
+			message,
 			node,
 		});
 		this.errors.push(err);
@@ -122,48 +127,55 @@ export default class ZrRuntime {
 		}
 	}
 
-	public registerFunction(name: string, func: ZrLuauFunction) {
+	public registerFunction(name: string, func: ZrLuauFunction): void {
 		this.functions.set(name, func);
 		this.locals.setGlobal(name, func);
 	}
 
-	public getLocals() {
+	public getLocals(): ZrLocalStack {
 		return this.locals;
 	}
 
-	public getErrors() {
+	public getErrors(): Array<ZrRuntimeError> {
 		return this.errors;
 	}
 
-	/**
-	 * Pushes a new stack onto the executor
-	 */
-	private push() {
+	/** Pushes a new stack onto the executor. */
+	private push(): void {
 		this.level++;
 		this.locals.push();
 
+		// eslint-disable-next-line ts/no-magic-numbers -- FIXME: Move to a constant Stack size?
 		if (this.level > 256) {
 			this.runtimeError("Stack overflow", ZrRuntimeErrorCode.StackOverflow);
 		}
 	}
 
 	/**
-	 * Pops the last stack from the executor
+	 * Pops the last stack from the executor.
+	 *
+	 * @returns Something..
 	 */
+	// eslint-disable-next-line ts/explicit-function-return-type -- FIXME: Investigate type, and refactor me!
 	private pop() {
 		this.level--;
 		return this.locals.pop();
 	}
 
-	private executeSetVariable(node: VariableDeclaration) {
-		const { identifier, expression, flags } = node;
+	// eslint-disable-next-line sonar/cognitive-complexity, max-lines-per-function -- FIXME: Refactor me pls.
+	private executeSetVariable(node: VariableDeclaration): undefined {
+		const { expression, flags, identifier } = node;
 		const value = this.evaluateNode(expression);
 		if (types.isIdentifier(identifier)) {
 			const isConstant = (flags & ZrNodeFlag.Const) !== 0;
 			const isLocalAssignment = isConstant || (flags & ZrNodeFlag.Let) !== 0;
 
 			if (isLocalAssignment) {
-				this.getLocals().setLocal(identifier.name, value === ZrUndefined ? undefined : value, isConstant);
+				this.getLocals().setLocal(
+					identifier.name,
+					value === ZrUndefined ? undefined : value,
+					isConstant,
+				);
 			} else {
 				const result = this.getLocals().setUpValueOrLocal(
 					identifier.name,
@@ -182,34 +194,41 @@ export default class ZrRuntime {
 				}
 			}
 		} else {
-			this.runtimeError("Not yet implemented", ZrRuntimeErrorCode.EvaluationError); // TODO implement
+			// TODO: implement
+			this.runtimeError("Not yet implemented", ZrRuntimeErrorCode.EvaluationError);
 		}
 
 		return undefined;
 	}
 
-	private evaluateObjectNode(node: ObjectLiteral) {
+	private evaluateObjectNode(node: ObjectLiteral): ZrObject {
 		const object = new ZrObject();
-		for (const prop of node.values) {
-			const value = this.evaluateNode(prop.initializer);
-			this.runtimeAssertNotUndefined(value, "No value", ZrRuntimeErrorCode.NodeValueError, prop.initializer);
-			object.set(prop.name.name, value);
+		for (const property of node.values) {
+			const value = this.evaluateNode(property.initializer);
+			this.runtimeAssertNotUndefined(
+				value,
+				"No value",
+				ZrRuntimeErrorCode.NodeValueError,
+				property.initializer,
+			);
+			object.set(property.name.name, value);
 		}
+
 		return object;
 	}
 
-	private evaluateFunctionDeclaration(node: FunctionDeclaration) {
+	private evaluateFunctionDeclaration(node: FunctionDeclaration): ZrUserFunction {
 		const declaration = new ZrUserFunction(node);
 		this.locals.setLocal(node.name.name, declaration, true);
 		return declaration;
 	}
 
-	private evaluateEnumDeclaration(node: EnumDeclarationStatement) {
-		const name = node.name.name;
+	private evaluateEnumDeclaration(node: EnumDeclarationStatement): ZrEnum {
+		const { name } = node.name;
 
 		const declaration = ZrEnum.fromArray(
-			node.name.name,
-			node.values.map((v) => v.name.name),
+			name,
+			node.values.map(value => value.name.name),
 		);
 
 		$print(declaration.getItems(), "declaration");
@@ -217,33 +236,34 @@ export default class ZrRuntime {
 		return declaration;
 	}
 
-	private evaluateFunctionExpression(node: FunctionExpression) {
-		const declaration = new ZrUserFunction(node);
-		return declaration;
+	private evaluateFunctionExpression(node: FunctionExpression): ZrUserFunction {
+		return new ZrUserFunction(node);
 	}
 
-	private evaluateArrayNode(node: ArrayLiteralExpression) {
+	private evaluateArrayNode(node: ArrayLiteralExpression): Array<ZrValue> {
 		const values = new Array<ZrValue>();
-		let i = 0;
+		let index = 0;
 		for (const subNode of node.values) {
 			const value = this.evaluateNode(subNode);
 			this.runtimeAssertNotUndefined(
 				value,
-				"Array value is NONE at index " + i,
+				"Array value is NONE at index " + index,
 				ZrRuntimeErrorCode.NodeValueError,
 				subNode,
 			);
 			if (value === ZrUndefined) {
 				break;
 			}
+
 			values.push(value);
-			i++;
+			index++;
 		}
+
 		return values;
 	}
 
-	private evaluateIfStatement(node: IfStatement) {
-		const { condition, thenStatement, elseStatement } = node;
+	private evaluateIfStatement(node: IfStatement): void {
+		const { condition, elseStatement, thenStatement } = node;
 		assert(condition);
 		const resultOfCondition = this.evaluateNode(condition);
 		this.runtimeAssertNotUndefined(
@@ -254,7 +274,9 @@ export default class ZrRuntime {
 		);
 
 		const isTruthy =
-			resultOfCondition !== undefined && resultOfCondition !== false && resultOfCondition !== ZrUndefined;
+			resultOfCondition !== undefined &&
+			resultOfCondition !== false &&
+			resultOfCondition !== ZrUndefined;
 
 		if (isTruthy && thenStatement !== undefined) {
 			this.evaluateNode(thenStatement);
@@ -263,7 +285,8 @@ export default class ZrRuntime {
 		}
 	}
 
-	private evaluateForInStatement(node: ForInStatement) {
+	// eslint-disable-next-line max-lines-per-function, sonar/cognitive-complexity -- FIXME: Refactor me pls.
+	private evaluateForInStatement(node: ForInStatement): void {
 		const { initializer, statement } = node;
 		let { expression } = node;
 
@@ -272,7 +295,7 @@ export default class ZrRuntime {
 			expression = expression.expression;
 		}
 
-		let value: ZrValue | ZrUndefined | undefined;
+		let value: undefined | ZrUndefined | ZrValue;
 
 		if (isNode(expression, ZrNodeKind.Identifier)) {
 			value = this.locals.getLocalOrUpValue(expression.name)?.[0] ?? ZrUndefined;
@@ -292,7 +315,11 @@ export default class ZrRuntime {
 		}
 
 		if (value === ZrUndefined) {
-			this.runtimeError("Cannot iterate undefined value", ZrRuntimeErrorCode.InvalidIterator, expression);
+			this.runtimeError(
+				"Cannot iterate undefined value",
+				ZrRuntimeErrorCode.InvalidIterator,
+				expression,
+			);
 		}
 
 		this.runtimeAssertNotUndefined(
@@ -331,7 +358,7 @@ export default class ZrRuntime {
 		}
 	}
 
-	private evaluateArrayIndexExpression(node: ArrayIndexExpression) {
+	private evaluateArrayIndexExpression(node: ArrayIndexExpression): undefined | ZrValue {
 		const { expression, index } = node;
 		const value = this.evaluateNode(expression);
 
@@ -345,22 +372,24 @@ export default class ZrRuntime {
 					expression,
 				);
 			}
+
 			return enumValue;
-		} else {
-			this.runtimeAssertNotUndefined(
-				value,
-				"Attempted to index nil value",
-				ZrRuntimeErrorCode.IndexingUndefined,
-				expression,
-			);
-			this.runtimeAssert(
-				isArray<ZrValue>(value),
-				"Attempt to index " + getTypeName(value) + " with a number",
-				ZrRuntimeErrorCode.InvalidArrayIndex,
-				index,
-			);
-			return value[index.value];
 		}
+
+		this.runtimeAssertNotUndefined(
+			value,
+			"Attempted to index nil value",
+			ZrRuntimeErrorCode.IndexingUndefined,
+			expression,
+		);
+		this.runtimeAssert(
+			isArray<ZrValue>(value),
+			"Attempt to index " + getTypeName(value) + " with a number",
+			ZrRuntimeErrorCode.InvalidArrayIndex,
+			index,
+		);
+
+		return value[index.value];
 	}
 
 	private setUserdata(
@@ -368,7 +397,7 @@ export default class ZrRuntime {
 		userdata: ZrUserdata<defined>,
 		key: string,
 		value: ZrValue,
-	) {
+	): void {
 		if (userdata.isInstance()) {
 			this.runtimeError(
 				"Runtime Violation: Instance properties are read-only via Zirconium",
@@ -380,7 +409,11 @@ export default class ZrRuntime {
 			try {
 				object[key] = value;
 			} catch (err) {
-				this.runtimeError(tostring(err), ZrRuntimeErrorCode.InstanceSetViolation, expression);
+				this.runtimeError(
+					tostring(err),
+					ZrRuntimeErrorCode.InstanceSetViolation,
+					expression,
+				);
 			}
 		}
 	}
@@ -389,12 +422,16 @@ export default class ZrRuntime {
 		expression: PropertyAccessExpression["expression"],
 		userdata: T,
 		key: string,
-	) {
+	): Instance[InferUserdataKeys<T>] | ZrValue {
 		if (userdata.isInstance()) {
 			try {
 				return userdata.get(key as InferUserdataKeys<T>);
 			} catch (err) {
-				this.runtimeError(tostring(err), ZrRuntimeErrorCode.InstanceGetViolation, expression);
+				this.runtimeError(
+					tostring(err),
+					ZrRuntimeErrorCode.InstanceGetViolation,
+					expression,
+				);
 			}
 		} else {
 			const object = userdata.value() as Record<string, ZrValue>;
@@ -402,8 +439,11 @@ export default class ZrRuntime {
 		}
 	}
 
-	private evaluatePropertyAccessExpression(node: PropertyAccessExpression) {
-		const { expression, name } = node;
+	// eslint-disable-next-line max-lines-per-function, id-length -- FIXME: Refactor me pls.
+	private evaluatePropertyAccessExpression(
+		node: PropertyAccessExpression,
+	): typeof ZrUndefined | undefined | ZrValue {
+		const { name, expression } = node;
 		const value = this.evaluateNode(expression);
 		const id = name.name;
 		this.runtimeAssertNotUndefined(id, "", ZrRuntimeErrorCode.NodeValueError, name);
@@ -420,33 +460,37 @@ export default class ZrRuntime {
 		} else if (value instanceof ZrEnum) {
 			return (
 				value.getItemByName(id) ??
-				this.runtimeError(`${id} is not a valid enum item`, ZrRuntimeErrorCode.InvalidEnumItem, name)
+				this.runtimeError(
+					`${id} is not a valid enum item`,
+					ZrRuntimeErrorCode.InvalidEnumItem,
+					name,
+				)
 			);
 		} else if (value instanceof ZrEnumItem) {
 			if (id === "name") {
 				return value.getName();
 			} else if (id === "value") {
 				return value.getValue();
-			} else {
-				this.runtimeError(
-					`Attempted to index EnumItem with ${id}`,
-					ZrRuntimeErrorCode.InvalidPropertyAccess,
-					name,
-				);
 			}
+
+			this.runtimeError(
+				`Attempted to index EnumItem with ${id}`,
+				ZrRuntimeErrorCode.InvalidPropertyAccess,
+				name,
+			);
 		} else if (isMap<ZrValue>(value)) {
 			return value.get(id);
 		} else if (value instanceof ZrRange) {
 			const property = ZrRange.properties[id];
 			if (property !== undefined) {
 				return property(value);
-			} else {
-				this.runtimeError(
-					`${id} is not a valid member of Range`,
-					ZrRuntimeErrorCode.InvalidPropertyAccess,
-					name,
-				);
 			}
+
+			this.runtimeError(
+				`${id} is not a valid member of Range`,
+				ZrRuntimeErrorCode.InvalidPropertyAccess,
+				name,
+			);
 		} else {
 			this.runtimeError(
 				`Attempt to index ${getTypeName(value)} with '${id}'`,
@@ -456,15 +500,19 @@ export default class ZrRuntime {
 		}
 	}
 
-	private evaluateFunctionCall(node: CallExpression | SimpleCallExpression, context: ZrContext) {
-		const { expression, children, arguments: callArgs } = node;
+	// eslint-disable-next-line max-lines-per-function, sonar/cognitive-complexity -- FIXME: Refactor me pls.
+	private evaluateFunctionCall(
+		node: CallExpression | SimpleCallExpression,
+		context: ZrContext,
+	): typeof ZrUndefined | undefined | ZrValue {
+		const { arguments: callArgs, expression } = node;
 
 		let options = new Array<OptionExpression>();
 		if (types.isCallExpression(node)) {
 			({ options } = node);
 		}
 
-		let matching: ZrValue | ZrUndefined | undefined;
+		let matching: undefined | ZrUndefined | ZrValue;
 		if (types.isArrayIndexExpression(expression)) {
 			throw `Not supported yet`;
 		} else if (types.isPropertyAccessExpression(expression)) {
@@ -476,19 +524,25 @@ export default class ZrRuntime {
 		// const matching = this.locals.getLocalOrUpValue(name)?.[0];
 		if (matching instanceof ZrUserFunction) {
 			this.push();
-			const params = matching.getParameters();
-			for (let i = 0; i < params.size(); i++) {
-				const param = params[i];
-				const value = callArgs[i];
+			const parameters = matching.getParameters();
+			for (let index = 0; index < parameters.size(); index++) {
+				const parameter = parameters[index];
+				const value = callArgs[index];
 				if (value !== undefined) {
 					const nodeValue = this.evaluateNode(value);
-					this.runtimeAssertNotUndefined(nodeValue, "Huh?", ZrRuntimeErrorCode.EvaluationError, node);
+					this.runtimeAssertNotUndefined(
+						nodeValue,
+						"Huh?",
+						ZrRuntimeErrorCode.EvaluationError,
+						node,
+					);
 
 					if (nodeValue !== ZrUndefined) {
-						this.locals.setLocal(param.name.name, nodeValue);
+						this.locals.setLocal(parameter.name.name, nodeValue);
 					}
 				}
 			}
+
 			for (const option of options) {
 				const value = this.evaluateNode(option.expression);
 				if (value !== undefined && value !== ZrUndefined) {
@@ -499,15 +553,17 @@ export default class ZrRuntime {
 			this.evaluateNode(matching.getBody());
 			this.pop();
 		} else if (matching instanceof ZrLuauFunction) {
-			const args = new Array<ZrValue | ZrUndefined>();
-			let i = 0;
+			const args = new Array<ZrUndefined | ZrValue>();
+			let index = 0;
 			for (const child of callArgs) {
 				const value = this.evaluateNode(child);
 				if (value !== undefined) {
-					args[i] = value;
+					args[index] = value;
 				}
-				i++;
+
+				index++;
 			}
+
 			const result = matching.call(context, ...args);
 			if (result !== undefined) {
 				return result;
@@ -521,115 +577,162 @@ export default class ZrRuntime {
 		}
 	}
 
-	public getLeafName(id: PropertyAccessExpression | ArrayIndexExpression | Identifier): string {
+	public getLeafName(id: ArrayIndexExpression | Identifier | PropertyAccessExpression): string {
 		if (types.isIdentifier(id)) {
 			return id.name;
 		} else if (types.isPropertyAccessExpression(id)) {
 			return id.name.name;
-		} else {
-			return tostring(id.index.value);
 		}
+
+		return tostring(id.index.value);
 	}
 
-	public getFullName(id: PropertyAccessExpression | ArrayIndexExpression | Identifier): string {
+	public getFullName(id: ArrayIndexExpression | Identifier | PropertyAccessExpression): string {
 		if (types.isIdentifier(id)) {
 			return id.name;
 		} else if (types.isArrayIndexExpression(id)) {
 			return `${this.getFullName(id.expression)}[${id.index.value}]`;
 		} else if (types.isPropertyAccessExpression(id)) {
 			return `${this.getFullName(id.expression)}.${this.getFullName(id.name)}`;
-		} else {
-			return "?";
 		}
+
+		return "?";
 	}
 
-	public evaluateBinaryExpression(node: BinaryExpression, input = ZrInputStream.empty()) {
+	// eslint-disable-next-line max-lines-per-function, sonar/cognitive-complexity -- FIXME: Refactor me pls.
+	public evaluateBinaryExpression(
+		node: BinaryExpression,
+		input = ZrInputStream.empty(),
+	): typeof ZrUndefined | undefined | ZrValue {
 		const { left, operator, right } = node;
-		if (operator === "|") {
-			this.runtimeAssert(
-				types.isCallableExpression(left) &&
-					(types.isCallableExpression(right) || isNode(right, ZrNodeKind.BinaryExpression)),
-				"Pipe expression only works with two command statements",
-				ZrRuntimeErrorCode.PipeError,
-			);
-			const output = new ZrOutputStream();
-			const context = ZrContext.createPipedContext(this, input, output);
-			const result = this.evaluateFunctionCall(left, context);
-
-			if (result !== undefined && result !== ZrUndefined) {
-				output.write(result);
-			}
-
-			if (types.isCallableExpression(right)) {
-				this.evaluateFunctionCall(
-					right,
-					ZrContext.createPipedContext(this, output._toInputStream(), this.context.getOutput()),
+		switch (operator) {
+			case "|": {
+				this.runtimeAssert(
+					types.isCallableExpression(left) &&
+						(types.isCallableExpression(right) ||
+							isNode(right, ZrNodeKind.BinaryExpression)),
+					"Pipe expression only works with two command statements",
+					ZrRuntimeErrorCode.PipeError,
 				);
-			} else {
-				this.evaluateBinaryExpression(right, output._toInputStream());
-			}
-		} else if (operator === "&&") {
-			if (types.isCallableExpression(left)) {
-				const result = this.evaluateFunctionCall(left, this.context);
-				if (result === undefined || (result !== undefined && result !== ZrUndefined)) {
-					return this.evaluateNode(right);
-				}
-			} else {
-				const result = this.evaluateNode(left);
+				const output = new ZrOutputStream();
+				const context = ZrContext.createPipedContext(this, input, output);
+				const result = this.evaluateFunctionCall(left, context);
+
 				if (result !== undefined && result !== ZrUndefined) {
-					return this.evaluateNode(right);
+					output.write(result);
+				}
+
+				if (types.isCallableExpression(right)) {
+					this.evaluateFunctionCall(
+						right,
+						ZrContext.createPipedContext(
+							this,
+							output._toInputStream(),
+							this.context.getOutput(),
+						),
+					);
+				} else {
+					this.evaluateBinaryExpression(right, output._toInputStream());
+				}
+
+				break;
+			}
+			case "&&": {
+				if (types.isCallableExpression(left)) {
+					const result = this.evaluateFunctionCall(left, this.context);
+					if (result === undefined || (result !== undefined && result !== ZrUndefined)) {
+						return this.evaluateNode(right);
+					}
+				} else {
+					const result = this.evaluateNode(left);
+					if (result !== undefined && result !== ZrUndefined) {
+						return this.evaluateNode(right);
+					}
+				}
+
+				break;
+			}
+			case "||": {
+				if (types.isCallableExpression(left)) {
+					const result = this.evaluateFunctionCall(left, this.context);
+					if (result !== undefined || result === ZrUndefined) {
+						return this.evaluateNode(right);
+					}
+				} else {
+					this.runtimeError("Binary OR not handled", ZrRuntimeErrorCode.EvaluationError);
+				}
+
+				break;
+			}
+			case "..": {
+				const leftValue = this.evaluateNode(left);
+				const rightValue = this.evaluateNode(right);
+				if (typeIs(leftValue, "number") && typeIs(rightValue, "number")) {
+					return new ZrRange(new NumberRange(leftValue, rightValue));
+				}
+
+				this.runtimeError(
+					"Range operator expects two numbers",
+					ZrRuntimeErrorCode.InvalidRangeError,
+					node,
+				);
+
+				break;
+			}
+			default: {
+				if (operator === "=" && types.isIdentifier(left)) {
+					const assignment = this.getLocals().setUpValueOrLocalIfDefined(
+						left.name,
+						this.evaluateNode(right),
+					);
+					if (assignment.isErr()) {
+						const err = assignment.unwrapErr();
+						// eslint-disable-next-line sonar/no-nested-switch -- FIXME: Refactor me pls. Move me to a new function maybe?
+						switch (err) {
+							case StackValueAssignmentError.ReassignConstant: {
+								this.runtimeError(
+									`Cannot reassign constant '${left.name}'`,
+									ZrRuntimeErrorCode.ReassignConstant,
+									left,
+								);
+							}
+							case StackValueAssignmentError.VariableNotDeclared: {
+								this.runtimeError(
+									`Unable to assign to undeclared '${left.name}' - use 'let' or 'const'`,
+									ZrRuntimeErrorCode.UnassignedVariable,
+									left,
+								);
+							}
+						}
+					} else {
+						return assignment.unwrap();
+					}
+				} else {
+					this.runtimeError(
+						`Unhandled expression '${operator}'`,
+						ZrRuntimeErrorCode.EvaluationError,
+					);
 				}
 			}
-		} else if (operator === "||") {
-			if (types.isCallableExpression(left)) {
-				const result = this.evaluateFunctionCall(left, this.context);
-				if (result !== undefined || result === ZrUndefined) {
-					return this.evaluateNode(right);
-				}
-			} else {
-				this.runtimeError("Binary OR not handled", ZrRuntimeErrorCode.EvaluationError);
-			}
-		} else if (operator === "..") {
-			const leftValue = this.evaluateNode(left);
-			const rightValue = this.evaluateNode(right);
-			if (typeIs(leftValue, "number") && typeIs(rightValue, "number")) {
-				return new ZrRange(new NumberRange(leftValue, rightValue));
-			} else {
-				this.runtimeError("Range operator expects two numbers", ZrRuntimeErrorCode.InvalidRangeError, node);
-			}
-		} else if (operator === "=" && types.isIdentifier(left)) {
-			const assignment = this.getLocals().setUpValueOrLocalIfDefined(left.name, this.evaluateNode(right));
-			if (assignment.isErr()) {
-				const err = assignment.unwrapErr();
-				switch (err) {
-					case StackValueAssignmentError.ReassignConstant:
-						this.runtimeError(
-							`Cannot reassign constant '${left.name}'`,
-							ZrRuntimeErrorCode.ReassignConstant,
-							left,
-						);
-					case StackValueAssignmentError.VariableNotDeclared:
-						this.runtimeError(
-							`Unable to assign to undeclared '${left.name}' - use 'let' or 'const'`,
-							ZrRuntimeErrorCode.UnassignedVariable,
-							left,
-						);
-				}
-			} else {
-				return assignment.unwrap();
-			}
-		} else {
-			this.runtimeError(`Unhandled expression '${operator}'`, ZrRuntimeErrorCode.EvaluationError);
 		}
+
 		return undefined;
 	}
 
-	/** @internal */
-	public evaluateNode(node: Node): ZrValue | ZrUndefined | undefined {
+	/**
+	 * Evaluates a node and throws if it errors, or something, idk I'm tired.
+	 *
+	 * @param node - The AST node by which to eval.
+	 * @returns The resolved node value or undefined.
+	 * @internal
+	 */
+	// eslint-disable-next-line max-lines-per-function, sonar/cognitive-complexity -- FIXME: Refactor me pls.
+	public evaluateNode(node: Node): undefined | ZrUndefined | ZrValue {
 		if (isNode(node, ZrNodeKind.Source)) {
 			for (const subNode of node.children) {
 				this.evaluateNode(subNode);
 			}
+
 			return undefined;
 		} else if (isNode(node, ZrNodeKind.String)) {
 			return node.text;
@@ -672,6 +775,7 @@ export default class ZrRuntime {
 		} else if (isNode(node, ZrNodeKind.InterpolatedString)) {
 			return this.getLocals().evaluateInterpolatedString(node);
 		} else if (isNode(node, ZrNodeKind.VariableStatement)) {
+			// eslint-disable-next-line ts/no-confusing-void-expression -- FIXME: May not always be void, this could be a type error?
 			return this.executeSetVariable(node.declaration);
 		} else if (isNode(node, ZrNodeKind.FunctionExpression)) {
 			return this.evaluateFunctionExpression(node);
@@ -680,19 +784,24 @@ export default class ZrRuntime {
 			for (const statement of node.statements) {
 				this.evaluateNode(statement);
 			}
+
 			this.pop();
 		} else if (types.isCallableExpression(node)) {
 			return this.evaluateFunctionCall(node, this.context);
 		} else {
-			this.runtimeError(`Failed to evaluate ${getFriendlyName(node)}`, ZrRuntimeErrorCode.EvaluationError, node);
+			this.runtimeError(
+				`Failed to evaluate ${getFriendlyName(node)}`,
+				ZrRuntimeErrorCode.EvaluationError,
+				node,
+			);
 		}
 	}
 
-	public getExecutingPlayer() {
+	public getExecutingPlayer(): Player | undefined {
 		return this.executingPlayer;
 	}
 
-	public execute() {
+	public execute(): ZrOutputStream {
 		this.evaluateNode(this.source);
 		return this.context.getOutput();
 	}

@@ -1,17 +1,17 @@
 export const enum ZrTokenKind {
-	Identifier = "Id",
-	Comment = "Comment",
-	String = "String",
-	InterpolatedString = "InterpolatedString",
-	Number = "Number",
+	ArrayIndex = "ArrayIndex",
 	Boolean = "Boolean",
+	Comment = "Comment",
+	EndOfStatement = "EndOfStatement",
+	Identifier = "Id",
+	InterpolatedString = "InterpolatedString",
+	Keyword = "Keyword",
+	Number = "Number",
 	Operator = "Operator",
 	Option = "Option",
-	Special = "Special",
-	Keyword = "Keyword",
 	PropertyAccess = "Property",
-	ArrayIndex = "ArrayIndex",
-	EndOfStatement = "EndOfStatement",
+	Special = "Special",
+	String = "String",
 	Whitespace = "Whitespace",
 }
 
@@ -19,20 +19,20 @@ export const KEYWORDS = ["if", "else", "for", "in", "function", "while", "const"
 export const TYPES = ["number", "string", "boolean"];
 
 export interface TokenTypes {
+	[ZrTokenKind.ArrayIndex]: ArrayIndexToken;
+	[ZrTokenKind.Boolean]: BooleanToken;
+	[ZrTokenKind.Comment]: CommentToken;
+	[ZrTokenKind.EndOfStatement]: EndOfStatementToken;
 	[ZrTokenKind.Identifier]: IdentifierToken;
-	[ZrTokenKind.String]: StringToken;
+	[ZrTokenKind.InterpolatedString]: InterpolatedStringToken;
+	[ZrTokenKind.Keyword]: KeywordToken;
 	[ZrTokenKind.Number]: NumberToken;
 	[ZrTokenKind.Operator]: OperatorToken;
-	[ZrTokenKind.Special]: SpecialToken;
-	[ZrTokenKind.Boolean]: BooleanToken;
-	[ZrTokenKind.Keyword]: KeywordToken;
-	[ZrTokenKind.InterpolatedString]: InterpolatedStringToken;
-	[ZrTokenKind.EndOfStatement]: EndOfStatementToken;
-	[ZrTokenKind.ArrayIndex]: ArrayIndexToken;
-	[ZrTokenKind.PropertyAccess]: PropertyAccessToken;
 	[ZrTokenKind.Option]: OptionToken;
+	[ZrTokenKind.PropertyAccess]: PropertyAccessToken;
+	[ZrTokenKind.Special]: SpecialToken;
+	[ZrTokenKind.String]: StringToken;
 	[ZrTokenKind.Whitespace]: WhitespaceToken;
-	[ZrTokenKind.Comment]: CommentToken;
 }
 
 export const enum ZrTokenFlag {
@@ -48,10 +48,10 @@ export const enum ZrTokenFlag {
 }
 
 export interface TokenBase {
-	kind: ZrTokenKind;
-	startPos: number;
 	endPos: number;
 	flags: ZrTokenFlag;
+	kind: ZrTokenKind;
+	startPos: number;
 }
 
 export interface WhitespaceToken extends TokenBase {
@@ -66,8 +66,8 @@ export interface CommentToken extends TokenBase {
 
 export interface OptionToken extends TokenBase {
 	kind: ZrTokenKind.Option;
-	value: string;
 	prefix?: string;
+	value: string;
 }
 
 export interface IdentifierToken extends TokenBase {
@@ -82,14 +82,14 @@ export interface ArrayIndexToken extends TokenBase {
 
 export interface PropertyAccessToken extends TokenBase {
 	kind: ZrTokenKind.PropertyAccess;
-	properties: string[];
+	properties: Array<string>;
 	value: string;
 }
 
 export interface BooleanToken extends TokenBase {
 	kind: ZrTokenKind.Boolean;
-	value: boolean;
 	rawText: string;
+	value: boolean;
 }
 
 export interface SpecialToken extends TokenBase {
@@ -108,37 +108,38 @@ export interface OperatorToken extends TokenBase {
 }
 
 export interface StringToken extends TokenBase {
-	kind: ZrTokenKind.String;
-	value: string;
 	closed: boolean;
-	startCharacter?: string;
 	endCharacter?: string;
+	kind: ZrTokenKind.String;
+	startCharacter?: string;
+	value: string;
 }
 
-export function joinInterpolatedString(values: string[], variables: string[]) {
+export function joinInterpolatedString(values: Array<string>, variables: Array<string>): string {
 	const resulting = new Array<string>();
-	for (let k = 0; k < values.size(); k++) {
-		const v = values[k];
-		resulting.push(v);
+	for (let key = 0; key < values.size(); key++) {
+		const value = values[key];
+		resulting.push(value);
 
-		const matchingVar = variables[k];
-		if (matchingVar !== undefined) {
-			resulting.push(`$${matchingVar}`);
+		const matchingVariable = variables[key];
+		if (matchingVariable !== undefined) {
+			resulting.push(`$${matchingVariable}`);
 		}
 	}
+
 	return resulting.join("");
 }
 
 export interface InterpolatedStringToken extends TokenBase {
-	kind: ZrTokenKind.InterpolatedString;
-	values: string[];
-	value: string;
-	variables: string[];
 	closed?: boolean;
+	kind: ZrTokenKind.InterpolatedString;
 	quotes?: string;
+	value: string;
+	values: Array<string>;
+	variables: Array<string>;
 }
 
-type Keywords = typeof KEYWORDS[number];
+type Keywords = (typeof KEYWORDS)[number];
 
 export interface KeywordToken extends TokenBase {
 	kind: ZrTokenKind.Keyword;
@@ -147,8 +148,8 @@ export interface KeywordToken extends TokenBase {
 
 export interface NumberToken extends TokenBase {
 	kind: ZrTokenKind.Number;
-	value: number;
 	rawText: string;
+	value: number;
 }
 
 export type Token = TokenTypes[keyof TokenTypes];

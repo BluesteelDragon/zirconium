@@ -1,62 +1,61 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ZrNodeKind, ZrNodeFlag } from "./Enum";
-import { ASSIGNABLE } from "./Guards";
+import type { ZrNodeFlag, ZrNodeKind } from "./enum";
+import type { ASSIGNABLE } from "./guards";
 
 export interface NodeTypes {
-	[ZrNodeKind.CallExpression]: CallExpression;
-	[ZrNodeKind.ExpressionStatement]: ExpressionStatement;
-	[ZrNodeKind.SimpleCallExpression]: SimpleCallExpression;
-	[ZrNodeKind.IfStatement]: IfStatement;
-	[ZrNodeKind.Block]: SourceBlock;
-	[ZrNodeKind.String]: StringLiteral;
-	[ZrNodeKind.OptionKey]: Option;
-	[ZrNodeKind.EndOfStatement]: EndOfStatement;
-	[ZrNodeKind.Source]: SourceFile;
-	[ZrNodeKind.Identifier]: Identifier;
-	[ZrNodeKind.PropertyAccessExpression]: PropertyAccessExpression;
-	[ZrNodeKind.Boolean]: BooleanLiteral;
-	[ZrNodeKind.Number]: NumberLiteral;
-	[ZrNodeKind.InterpolatedString]: InterpolatedStringExpression;
-	[ZrNodeKind.BinaryExpression]: BinaryExpression;
-	[ZrNodeKind.OperatorToken]: OperatorToken;
-	[ZrNodeKind.PrefixToken]: PrefixToken;
-	[ZrNodeKind.PrefixExpression]: PrefixExpression;
-	[ZrNodeKind.VariableDeclaration]: VariableDeclaration;
-	[ZrNodeKind.VariableStatement]: VariableStatement;
-	[ZrNodeKind.Invalid]: InvalidNode;
-	[ZrNodeKind.OptionExpression]: OptionExpression;
-	[ZrNodeKind.InnerExpression]: InnerExpression;
-	[ZrNodeKind.ArrayLiteralExpression]: ArrayLiteralExpression;
 	[ZrNodeKind.ArrayIndexExpression]: ArrayIndexExpression;
-	[ZrNodeKind.ParenthesizedExpression]: ParenthesizedExpression;
-	[ZrNodeKind.FunctionDeclaration]: FunctionDeclaration;
-	[ZrNodeKind.Parameter]: ParameterDeclaration;
-	[ZrNodeKind.TypeReference]: TypeReference;
-	[ZrNodeKind.ForInStatement]: ForInStatement;
-	[ZrNodeKind.ObjectLiteralExpression]: ObjectLiteral;
-	[ZrNodeKind.PropertyAssignment]: PropertyAssignment;
-	[ZrNodeKind.UnaryExpression]: UnaryExpression;
-	[ZrNodeKind.UndefinedKeyword]: UndefinedKeyword;
-	[ZrNodeKind.ExportKeyword]: ExportKeyword;
-	[ZrNodeKind.FunctionExpression]: FunctionExpression;
-	[ZrNodeKind.ReturnStatement]: ReturnStatement;
-	[ZrNodeKind.RangeExpression]: RangeExpression;
+	[ZrNodeKind.ArrayLiteralExpression]: ArrayLiteralExpression;
+	[ZrNodeKind.BinaryExpression]: BinaryExpression;
+	[ZrNodeKind.Block]: SourceBlock;
+	[ZrNodeKind.Boolean]: BooleanLiteral;
+	[ZrNodeKind.CallExpression]: CallExpression;
+	[ZrNodeKind.EndOfStatement]: EndOfStatement;
 	[ZrNodeKind.EnumDeclaration]: EnumDeclarationStatement;
 	[ZrNodeKind.EnumItemExpression]: EnumItemExpression;
+	[ZrNodeKind.ExportKeyword]: ExportKeyword;
+	[ZrNodeKind.ExpressionStatement]: ExpressionStatement;
+	[ZrNodeKind.ForInStatement]: ForInStatement;
+	[ZrNodeKind.FunctionDeclaration]: FunctionDeclaration;
+	[ZrNodeKind.FunctionExpression]: FunctionExpression;
+	[ZrNodeKind.Identifier]: Identifier;
+	[ZrNodeKind.IfStatement]: IfStatement;
+	[ZrNodeKind.InnerExpression]: InnerExpression;
+	[ZrNodeKind.InterpolatedString]: InterpolatedStringExpression;
+	[ZrNodeKind.Invalid]: InvalidNode;
+	[ZrNodeKind.Number]: NumberLiteral;
+	[ZrNodeKind.ObjectLiteralExpression]: ObjectLiteral;
+	[ZrNodeKind.OperatorToken]: OperatorToken;
+	[ZrNodeKind.OptionExpression]: OptionExpression;
+	[ZrNodeKind.OptionKey]: Option;
+	[ZrNodeKind.Parameter]: ParameterDeclaration;
+	[ZrNodeKind.ParenthesizedExpression]: ParenthesizedExpression;
+	[ZrNodeKind.PrefixExpression]: PrefixExpression;
+	[ZrNodeKind.PrefixToken]: PrefixToken;
+	[ZrNodeKind.PropertyAccessExpression]: PropertyAccessExpression;
+	[ZrNodeKind.PropertyAssignment]: PropertyAssignment;
+	[ZrNodeKind.RangeExpression]: RangeExpression;
+	[ZrNodeKind.ReturnStatement]: ReturnStatement;
+	[ZrNodeKind.SimpleCallExpression]: SimpleCallExpression;
+	[ZrNodeKind.Source]: SourceFile;
+	[ZrNodeKind.String]: StringLiteral;
+	[ZrNodeKind.TypeReference]: TypeReference;
+	[ZrNodeKind.UnaryExpression]: UnaryExpression;
+	[ZrNodeKind.UndefinedKeyword]: UndefinedKeyword;
+	[ZrNodeKind.VariableDeclaration]: VariableDeclaration;
+	[ZrNodeKind.VariableStatement]: VariableStatement;
 }
 
 export interface Node {
+	children?: Array<Node>;
+	endPos?: number;
+	flags: ZrNodeFlag;
 	kind: ZrNodeKind;
 	parent?: Node;
-	startPos?: number;
 	rawText?: string;
-	endPos?: number;
-	children?: Node[];
-	flags: ZrNodeFlag;
+	startPos?: number;
 }
 
 export interface ValuesExpression extends Expression {
-	readonly values: Node[];
+	readonly values: Array<Node>;
 }
 
 export interface Statement extends Node {
@@ -69,7 +68,7 @@ export interface Declaration extends Node {
 	readonly _nominal_Declaration: unique symbol;
 }
 
-type DeclarationName = Identifier | StringLiteral | NumberLiteral;
+type DeclarationName = Identifier | NumberLiteral | StringLiteral;
 export interface NamedDeclaration extends Declaration {
 	readonly name?: DeclarationName;
 }
@@ -78,7 +77,7 @@ export interface Keyword extends Node {
 	readonly _nominal_Keyword: unique symbol;
 }
 
-type PropertyName = Identifier | StringLiteral | NumberLiteral;
+type PropertyName = Identifier | NumberLiteral | StringLiteral;
 export interface ObjectLiteralElement extends NamedDeclaration {
 	/** @deprecated */
 	readonly _nominal_ObjectLiteralElement: unique symbol;
@@ -100,14 +99,14 @@ export interface LiteralExpression extends Expression {
 }
 
 export interface DeclarationStatement extends Statement {
-	readonly name?: Identifier | StringLiteral | NumberLiteral;
+	readonly name?: Identifier | NumberLiteral | StringLiteral;
 }
 
-type OP = "&&" | "|" | "=";
+type OP = "&&" | "=" | "|";
 
 export interface OperatorToken extends Node {
-	operator: string;
 	kind: ZrNodeKind.OperatorToken;
+	operator: string;
 }
 
 export interface ExportKeyword extends Keyword {
@@ -119,8 +118,8 @@ export interface UndefinedKeyword extends Keyword, Expression {
 }
 
 export interface ParenthesizedExpression extends Expression {
-	kind: ZrNodeKind.ParenthesizedExpression;
 	expression: Expression;
+	kind: ZrNodeKind.ParenthesizedExpression;
 }
 
 export interface RangeExpression extends Expression {
@@ -137,56 +136,59 @@ export interface TypeReference extends Node {
 export interface ParameterDeclaration extends NamedDeclaration {
 	kind: ZrNodeKind.Parameter;
 	name: Identifier;
-	type?: TypeReference; // TODO: NumberKeyword, StringKeyword etc.
+	/** TODO: NumberKeyword, StringKeyword etc. */
+	type?: TypeReference;
 }
 
 export interface ReturnStatement extends Statement {
-	kind: ZrNodeKind.ReturnStatement;
 	expression: Expression;
+	kind: ZrNodeKind.ReturnStatement;
 }
 
 export interface ForInStatement extends Statement {
-	kind: ZrNodeKind.ForInStatement;
-	initializer: Identifier;
 	expression: Expression;
+	initializer: Identifier;
+	kind: ZrNodeKind.ForInStatement;
 	statement: SourceBlock;
 }
 
 export interface FunctionExpression extends Expression {
-	kind: ZrNodeKind.FunctionExpression;
-	parameters: ParameterDeclaration[]; // TODO:
 	body: SourceBlock;
+	kind: ZrNodeKind.FunctionExpression;
+	/** TODO:. */
+	parameters: Array<ParameterDeclaration>;
 }
 
 export interface FunctionDeclaration extends DeclarationStatement {
+	body: SourceBlock;
 	kind: ZrNodeKind.FunctionDeclaration;
 	name: Identifier;
-	parameters: ParameterDeclaration[]; // TODO:
-	body: SourceBlock;
+	/** TODO:. */
+	parameters: Array<ParameterDeclaration>;
 }
 
 export interface SourceFile extends Node {
-	kind: ZrNodeKind.Source;
 	children: Array<Node>;
+	kind: ZrNodeKind.Source;
 }
 
 export interface InterpolatedStringExpression extends ValuesExpression {
 	kind: ZrNodeKind.InterpolatedString;
-	values: Array<StringLiteral | Identifier>;
+	values: Array<Identifier | StringLiteral>;
 }
 
 export interface UnaryExpression extends Expression {
-	kind: ZrNodeKind.UnaryExpression;
 	expression: Node;
+	kind: ZrNodeKind.UnaryExpression;
 	operator: string;
 }
 
 export interface BinaryExpression extends Expression, Declaration {
+	children: Array<Node>;
 	kind: ZrNodeKind.BinaryExpression;
 	left: Expression;
 	operator: string;
 	right: Expression;
-	children: Node[];
 }
 
 export interface EnumItemExpression extends Expression {
@@ -197,79 +199,79 @@ export interface EnumItemExpression extends Expression {
 export interface EnumDeclarationStatement extends Statement {
 	kind: ZrNodeKind.EnumDeclaration;
 	name: Identifier;
-	values: EnumItemExpression[];
+	values: Array<EnumItemExpression>;
 }
 
 export interface ArrayLiteralExpression extends ValuesExpression {
 	kind: ZrNodeKind.ArrayLiteralExpression;
-	values: Node[];
+	values: Array<Node>;
 }
 
 export interface PropertyAssignment extends ObjectLiteralElement {
+	initializer: Expression;
 	kind: ZrNodeKind.PropertyAssignment;
 	name: Identifier;
-	initializer: Expression;
 }
 
 export interface ObjectLiteral extends LiteralExpression, ValuesExpression {
 	kind: ZrNodeKind.ObjectLiteralExpression;
-	values: PropertyAssignment[];
+	values: Array<PropertyAssignment>;
 }
 
 export interface InvalidNode extends Node {
-	kind: ZrNodeKind.Invalid;
 	expression: Node;
+	kind: ZrNodeKind.Invalid;
 	message: string;
 }
 
 export interface VariableDeclaration extends Declaration {
-	kind: ZrNodeKind.VariableDeclaration;
-	identifier: Identifier | PropertyAccessExpression | ArrayIndexExpression;
 	expression: AssignableExpression;
+	identifier: ArrayIndexExpression | Identifier | PropertyAccessExpression;
+	kind: ZrNodeKind.VariableDeclaration;
 }
 
 export interface VariableStatement extends Statement {
+	declaration: VariableDeclaration;
 	kind: ZrNodeKind.VariableStatement;
 	modifiers?: Array<ExportKeyword>;
-	declaration: VariableDeclaration;
 }
 
 export interface PropertyAccessExpression extends Expression {
+	expression: ArrayIndexExpression | Identifier | PropertyAccessExpression;
 	kind: ZrNodeKind.PropertyAccessExpression;
-	expression: Identifier | PropertyAccessExpression | ArrayIndexExpression;
 	name: Identifier;
 }
 
 export interface ArrayIndexExpression extends Expression {
-	kind: ZrNodeKind.ArrayIndexExpression;
-	expression: Identifier | PropertyAccessExpression | ArrayIndexExpression;
+	expression: ArrayIndexExpression | Identifier | PropertyAccessExpression;
 	index: NumberLiteral;
+	kind: ZrNodeKind.ArrayIndexExpression;
 }
 
 export interface StringLiteral extends LiteralExpression {
+	isUnterminated?: boolean;
 	kind: ZrNodeKind.String;
 	quotes?: string;
-	isUnterminated?: boolean;
 	text: string;
 }
 
 export interface SourceBlock extends Statement {
 	kind: ZrNodeKind.Block;
-	statements: Statement[];
+	statements: Array<Statement>;
 }
 
-export type AssignableExpression = NodeTypes[typeof ASSIGNABLE[number]];
+export type AssignableExpression = NodeTypes[(typeof ASSIGNABLE)[number]];
 
 export interface IfStatement extends Statement {
-	kind: ZrNodeKind.IfStatement;
 	condition: Expression | undefined;
-	thenStatement: SourceBlock | Statement | undefined;
 	elseStatement: IfStatement | SourceBlock | Statement | undefined;
+	kind: ZrNodeKind.IfStatement;
+	thenStatement: SourceBlock | Statement | undefined;
 }
 
 export interface ExpressionStatement extends Statement {
-	kind: ZrNodeKind.ExpressionStatement;
 	expression: Expression;
+	kind: ZrNodeKind.ExpressionStatement;
 }
 
 export interface BooleanLiteral extends LiteralExpression {
@@ -282,35 +284,31 @@ export interface NumberLiteral extends LiteralExpression {
 	value: number;
 }
 
-/**
- * An expression like `func(...)`
- */
+/** An expression like `func(...)`. */
 export interface CallExpression extends Expression {
-	readonly kind: ZrNodeKind.CallExpression;
-	readonly expression: Identifier | PropertyAccessExpression | ArrayIndexExpression;
-	readonly options: OptionExpression[];
+	readonly arguments: Array<Node>;
+	readonly expression: ArrayIndexExpression | Identifier | PropertyAccessExpression;
 	readonly isUnterminated?: boolean;
-	readonly arguments: Node[];
+	readonly kind: ZrNodeKind.CallExpression;
+	readonly options: Array<OptionExpression>;
 }
 
-/**
- * An expression like `func ...`
- */
+/** An expression like `func ...`. */
 export interface SimpleCallExpression extends Expression {
-	kind: ZrNodeKind.SimpleCallExpression;
-	expression: Identifier | ArrayIndexExpression | PropertyAccessExpression;
+	arguments: Array<Node>;
+	expression: ArrayIndexExpression | Identifier | PropertyAccessExpression;
 	isUnterminated?: boolean;
-	arguments: Node[];
+	kind: ZrNodeKind.SimpleCallExpression;
 }
 
 export interface InnerExpression extends Expression {
+	expression: BinaryExpression | Statement;
 	kind: ZrNodeKind.InnerExpression;
-	expression: Statement | BinaryExpression;
 }
 
 export interface NodeError {
-	node: Node;
 	message: string;
+	node: Node;
 }
 
 export interface Option extends LeftHandSideExpression {
@@ -319,18 +317,18 @@ export interface Option extends LeftHandSideExpression {
 }
 
 export interface OptionExpression extends Expression {
-	option: Option;
 	expression: Expression;
+	option: Option;
 }
 
 export const VALID_PREFIX_CHARS = ["~", "@", "%", "^", "*", "!"] as const;
 export interface PrefixToken extends Node {
-	value: typeof VALID_PREFIX_CHARS[number];
+	value: (typeof VALID_PREFIX_CHARS)[number];
 }
 
 export interface PrefixExpression extends Expression {
+	expression: BooleanLiteral | InterpolatedStringExpression | NumberLiteral | StringLiteral;
 	prefix: PrefixToken;
-	expression: StringLiteral | NumberLiteral | InterpolatedStringExpression | BooleanLiteral;
 }
 
 export interface Identifier extends Declaration, LeftHandSideExpression {
@@ -342,7 +340,7 @@ export interface EndOfStatement extends Node {
 	kind: ZrNodeKind.EndOfStatement;
 }
 
-type NonParentNode<T> = T extends { children: Node[] } ? never : T;
+type NonParentNode<T> = T extends { children: Array<Node> } ? never : T;
 export type ParentNode = Exclude<Node, NonParentNode<Node>>;
 
 export type NodeKind = keyof NodeTypes;

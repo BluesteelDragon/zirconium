@@ -1,12 +1,14 @@
-import prettyPrintNodes from "./Utility/PrettyPrintNodes";
-import ZrLexer from "./Lexer";
-import ZrTextStream from "./TextStream";
-import ZrParser from "./Parser";
-import ZrRichTextHighlighter from "./Syntax/RichTextHighlighter";
-import * as factory from "./Nodes/Create";
-import * as ZrVisitors from "./Utility/NodeVisitor";
-import { typeGuards as types } from "./Nodes";
-const AST_VERSION = PKG_VERSION;
+import prettyPrintNodes from "./utility/pretty-print-nodes";
+import ZrLexer from "./lexer";
+import ZrTextStream from "./text-stream";
+import ZrParser from "./parser";
+import ZrRichTextHighlighter from "./syntax/richtext-highlighter";
+import * as factory from "./nodes/create";
+import * as ZrVisitors from "./utility/node-visitor";
+import { typeGuards as types } from "./nodes";
+import { $package } from "rbxts-transform-debug";
+
+const AST_VERSION = $package.version;
 
 export {
 	ZrVisitors,
@@ -20,4 +22,4 @@ export {
 	types,
 };
 
-export * from "./Nodes/Guards";
+export * from "./nodes/guards";

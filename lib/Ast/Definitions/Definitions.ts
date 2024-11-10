@@ -1,11 +1,10 @@
-import { Node } from "../Nodes/NodeTypes";
-import { isStringExpression, isNumberLiteral, isBooleanLiteral } from "../Nodes/Guards";
+import { isBooleanLiteral, isNumberLiteral, isStringExpression } from "../nodes/guards";
+import type { Node } from "../nodes/node-types";
 
-/* eslint-disable @typescript-eslint/no-empty-interface */
-export type AstPrimitiveType = "string" | "number" | "boolean" | "switch";
+export type AstPrimitiveType = "boolean" | "number" | "string" | "switch";
 
 interface AstBaseDefinition {
-	readonly type: readonly AstPrimitiveType[];
+	readonly type: ReadonlyArray<AstPrimitiveType>;
 }
 
 export interface AstArgumentDefinition extends AstBaseDefinition {
@@ -14,12 +13,12 @@ export interface AstArgumentDefinition extends AstBaseDefinition {
 export interface AstOptionDefinition extends AstBaseDefinition {}
 
 export interface AstCommandDefinition {
+	readonly args?: ReadonlyArray<AstArgumentDefinition>;
+	readonly children?: ReadonlyArray<AstCommandDefinition>;
 	readonly command: string;
 	readonly options?: Readonly<Record<string, AstOptionDefinition>>;
-	readonly args?: readonly AstArgumentDefinition[];
-	readonly children?: readonly AstCommandDefinition[];
 }
-export type AstCommandDefinitions = readonly AstCommandDefinition[];
+export type AstCommandDefinitions = ReadonlyArray<AstCommandDefinition>;
 
 export function nodeMatchAstDefinitionType(node: Node, typeName: AstPrimitiveType): MatchResult {
 	if (typeName === "string" && isStringExpression(node)) {
@@ -31,11 +30,15 @@ export function nodeMatchAstDefinitionType(node: Node, typeName: AstPrimitiveTyp
 	} else if (typeName === "switch") {
 		return { matches: true, matchType: typeName };
 	}
+
 	return { matches: false };
 }
 
-type MatchResult = { matches: true; matchType: AstPrimitiveType } | { matches: false };
-export function nodeMatchesAstDefinitionTypes(node: Node, types: readonly AstPrimitiveType[]): MatchResult {
+type MatchResult = { matches: false } | { matches: true; matchType: AstPrimitiveType };
+export function nodeMatchesAstDefinitionTypes(
+	node: Node,
+	types: ReadonlyArray<AstPrimitiveType>,
+): MatchResult {
 	for (const typeName of types) {
 		const result = nodeMatchAstDefinitionType(node, typeName);
 		if (result.matches) {

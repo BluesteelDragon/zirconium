@@ -1,25 +1,44 @@
-import { Node } from "../Nodes/NodeTypes";
-import { isNode } from "../Nodes/Guards";
-import { CmdSyntaxKind } from "../Nodes";
-import { getNodeKindName } from "../Nodes/Functions";
-import { ZrNodeFlag } from "../Nodes/Enum";
+import { CmdSyntaxKind } from "../nodes";
+import { ZrNodeFlag } from "../nodes/enum";
+import { getNodeKindName } from "../nodes/functions";
+import { isNode } from "../nodes/guards";
+import type { Node } from "../nodes/node-types";
 
-function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
+// eslint-disable-next-line max-lines-per-function, sonar/cognitive-complexity -- FIXME: Refactor me pls.
+function prettyPrintNodes(nodes: Array<Node>, prefix = "", verbose = false): void {
 	for (const node of nodes) {
 		if (isNode(node, CmdSyntaxKind.String)) {
-			const str = node.quotes !== undefined ? `${node.quotes}${node.text}${node.quotes}` : `\`${node.text}\``;
+			const str =
+				node.quotes !== undefined
+					? `${node.quotes}${node.text}${node.quotes}`
+					: `\`${node.text}\``;
 			if (verbose) {
-				print(prefix, getNodeKindName(node), str, `[${node.startPos}:${node.endPos}]`, `{${node.rawText}}`);
+				print(
+					prefix,
+					getNodeKindName(node),
+					str,
+					`[${node.startPos}:${node.endPos}]`,
+					`{${node.rawText}}`,
+				);
 			} else {
 				print(prefix, CmdSyntaxKind[node.kind], str);
 			}
 
-			if (node.isUnterminated) {
+			if (node.isUnterminated ?? false) {
 				print(prefix, "Unterminated String");
 			}
-		} else if (isNode(node, CmdSyntaxKind.CallExpression) || isNode(node, CmdSyntaxKind.SimpleCallExpression)) {
+		} else if (
+			isNode(node, CmdSyntaxKind.CallExpression) ||
+			isNode(node, CmdSyntaxKind.SimpleCallExpression)
+		) {
 			if (verbose) {
-				print(prefix, CmdSyntaxKind[node.kind], `'${node.rawText}'`, `[${node.startPos}:${node.endPos}]`, "{");
+				print(
+					prefix,
+					CmdSyntaxKind[node.kind],
+					`'${node.rawText}'`,
+					`[${node.startPos}:${node.endPos}]`,
+					"{",
+				);
 			} else {
 				print(prefix, CmdSyntaxKind[node.kind], "{");
 			}
@@ -29,6 +48,7 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			if (isNode(node, CmdSyntaxKind.CallExpression)) {
 				prettyPrintNodes(node.options, prefix + "\t", verbose);
 			}
+
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.Number) || isNode(node, CmdSyntaxKind.Boolean)) {
 			if (verbose) {
@@ -44,10 +64,16 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			}
 		} else if (isNode(node, CmdSyntaxKind.OptionKey)) {
 			if (verbose) {
-				print(prefix, CmdSyntaxKind[node.kind], node.flag, `[${node.startPos ?? 0}:${node.endPos ?? 0}]`);
+				print(
+					prefix,
+					CmdSyntaxKind[node.kind],
+					node.flag,
+					`[${node.startPos ?? 0}:${node.endPos ?? 0}]`,
+				);
 			} else {
 				print(prefix, CmdSyntaxKind[node.kind], node.flag);
 			}
+
 			prettyPrintNodes([node.right!], prefix + "\t", verbose);
 		} else if (isNode(node, CmdSyntaxKind.Identifier)) {
 			if (verbose) {
@@ -97,7 +123,13 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.InterpolatedString)) {
 			if (verbose) {
-				print(prefix, CmdSyntaxKind[node.kind], `'${node.rawText}'`, `[${node.startPos}:${node.endPos}]`, "{");
+				print(
+					prefix,
+					CmdSyntaxKind[node.kind],
+					`'${node.rawText}'`,
+					`[${node.startPos}:${node.endPos}]`,
+					"{",
+				);
 			} else {
 				print(prefix, CmdSyntaxKind[node.kind], "{");
 			}
@@ -121,7 +153,11 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.VariableDeclaration)) {
 			const isConst =
-				(node.flags & ZrNodeFlag.Const) !== 0 ? "const" : (node.flags & ZrNodeFlag.Let) !== 0 ? "let" : "var";
+				(node.flags & ZrNodeFlag.Const) !== 0
+					? "const"
+					: (node.flags & ZrNodeFlag.Let) !== 0
+						? "let"
+						: "var";
 			print(prefix, CmdSyntaxKind[node.kind], isConst, "{");
 
 			prettyPrintNodes([node.identifier, node.expression], prefix + "\t", verbose);
@@ -131,6 +167,7 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			if (node.modifiers) {
 				prettyPrintNodes(node.modifiers, prefix + "\t", verbose);
 			}
+
 			prettyPrintNodes([node.declaration], prefix + "\t", verbose);
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.EndOfStatement)) {
@@ -139,10 +176,16 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			print(prefix, "SYNTAX ERROR", node.message);
 		} else if (isNode(node, CmdSyntaxKind.OptionExpression)) {
 			if (verbose) {
-				print(prefix, "OptionExpression", `[${node.startPos ?? 0}:${node.endPos ?? 0}]`, "{");
+				print(
+					prefix,
+					"OptionExpression",
+					`[${node.startPos ?? 0}:${node.endPos ?? 0}]`,
+					"{",
+				);
 			} else {
 				print(prefix, "OptionExpression", "{");
 			}
+
 			prettyPrintNodes([node.option, node.expression], prefix + "\t", verbose);
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.ExpressionStatement)) {
@@ -198,7 +241,11 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.ForInStatement)) {
 			print(prefix, "ForInStatement", "{");
-			prettyPrintNodes([node.initializer, node.expression, node.statement], prefix + "\t", verbose);
+			prettyPrintNodes(
+				[node.initializer, node.expression, node.statement],
+				prefix + "\t",
+				verbose,
+			);
 			print(prefix, "}");
 		} else if (isNode(node, CmdSyntaxKind.ReturnStatement)) {
 			print(prefix, "ReturnStatement", "{");
@@ -209,12 +256,15 @@ function prettyPrintNodes(nodes: Node[], prefix = "", verbose = false) {
 			if (node.condition) {
 				prettyPrintNodes([node.condition], prefix + "\t", verbose);
 			}
+
 			if (node.thenStatement) {
 				prettyPrintNodes([node.thenStatement], prefix + "\t", verbose);
 			}
+
 			if (node.elseStatement) {
 				prettyPrintNodes([node.elseStatement], prefix + "\t", verbose);
 			}
+
 			print(prefix, "}");
 		} else {
 			print(prefix, getNodeKindName(node));

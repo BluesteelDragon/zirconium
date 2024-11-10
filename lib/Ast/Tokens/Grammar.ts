@@ -1,9 +1,6 @@
 const Grammar = {
-	Operators: ["&", "|", "=", ">", "<", "-", "+", "/", "*", "!", "?", "%", "^", "~"],
-	UnaryOperators: ["!"],
-	EndOfStatement: [";", "\n"],
-	Punctuation: ["(", ")", ",", "{", "}", "[", "]", ".", ":", "\\", "@", "`"],
 	BooleanLiterals: ["true", "false"],
+	EndOfStatement: [";", "\n"],
 	Keywords: [
 		"if",
 		"else",
@@ -35,7 +32,7 @@ const Grammar = {
 		"throw",
 		"from",
 	],
-	Types: ["number", "string", "boolean"],
+	/* eslint-disable perfectionist/sort-objects -- Visually easier to see hierarchy like this. */
 	OperatorPrecedence: identity<Record<string, number>>({
 		"..": 1,
 		"!": 2,
@@ -57,22 +54,31 @@ const Grammar = {
 		"/": 20,
 		"%": 20,
 	}),
+	/* eslint-enable perfectionist/sort-objects */
+	Operators: ["&", "|", "=", ">", "<", "-", "+", "/", "*", "!", "?", "%", "^", "~"],
+	Punctuation: ["(", ")", ",", "{", "}", "[", "]", ".", ":", "\\", "@", "`"],
+	Types: ["number", "string", "boolean"],
+	UnaryOperators: ["!"],
 } as const;
 
-export type OperatorTokens = typeof Grammar["Operators"][number];
-export type KeywordTokens = typeof Grammar["Keywords"][number];
-export type EndOfStatementTokens = typeof Grammar["EndOfStatement"][number];
-export type PunctuationTokens = typeof Grammar["Punctuation"][number];
-export type BooleanLiteralTokens = typeof Grammar["BooleanLiterals"][number];
-export type UnaryOperatorsTokens = typeof Grammar["UnaryOperators"][number];
+export type OperatorTokens = (typeof Grammar)["Operators"][number];
+export type KeywordTokens = (typeof Grammar)["Keywords"][number];
+export type EndOfStatementTokens = (typeof Grammar)["EndOfStatement"][number];
+export type PunctuationTokens = (typeof Grammar)["Punctuation"][number];
+export type BooleanLiteralTokens = (typeof Grammar)["BooleanLiterals"][number];
+export type UnaryOperatorsTokens = (typeof Grammar)["UnaryOperators"][number];
 
-export type KeywordMap<K extends ReadonlyArray<string>> = { readonly [P in Uppercase<K[number]>]: Lowercase<P> };
-function makeKeywordMap<K extends ReadonlyArray<string>>(value: K) {
+export type KeywordMap<K extends ReadonlyArray<string>> = {
+	readonly [P in Uppercase<K[number]>]: Lowercase<P>;
+};
+
+function makeKeywordMap<K extends ReadonlyArray<string>>(value: K): KeywordMap<K> {
 	const items: Record<string, string> = {};
 	for (const item of value) {
 		items[item.upper()] = item;
 	}
-	return (items as unknown) as KeywordMap<K>;
+
+	return items as unknown as KeywordMap<K>;
 }
 
 export const Keywords = makeKeywordMap(Grammar.Keywords);

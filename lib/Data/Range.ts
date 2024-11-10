@@ -1,43 +1,43 @@
-import { ZrValue } from "./Locals";
+import type { ZrValue } from "./locals";
 
 export default class ZrRange {
-	private rng = new Random();
+	private readonly rng = new Random();
 
 	public static properties: Record<string, (range: ZrRange) => ZrValue> = {
-		random_int: (range) => {
-			return range.GetRandomInteger();
-		},
-		random: (range) => range.GetRandomNumber(),
-		min: (range) => range.GetMin(),
-		max: (range) => range.GetMax(),
+		max: range => range.GetMax(),
+		min: range => range.GetMin(),
+		random: range => range.GetRandomNumber(),
+		random_int: range => range.GetRandomInteger(),
 	};
 
-	public constructor(private range: NumberRange) {}
-	public GetValue() {
+	constructor(private readonly range: NumberRange) {}
+	public GetValue(): NumberRange {
 		return this.range;
 	}
 
-	public GetRandomInteger() {
+	public GetRandomInteger(): number {
 		return this.rng.NextInteger(this.range.Min, this.range.Max);
 	}
-	public GetRandomNumber() {
+
+	public GetRandomNumber(): number {
 		return this.rng.NextNumber(this.range.Min, this.range.Max);
 	}
-	public *Iterator() {
-		for (let i = this.range.Min; i <= this.range.Max; i++) {
-			yield i;
+
+	public *Iterator(): Generator<number> {
+		for (let index = this.range.Min; index <= this.range.Max; index++) {
+			yield index;
 		}
 	}
 
-	public GetMin() {
+	public GetMin(): number {
 		return this.range.Min;
 	}
 
-	public GetMax() {
+	public GetMax(): number {
 		return this.range.Max;
 	}
 
-	public toString() {
+	public toString(): string {
 		return `${this.range.Min} .. ${this.range.Max}`;
 	}
 }

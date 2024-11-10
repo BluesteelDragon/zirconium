@@ -1,10 +1,10 @@
-import { NodeError } from "./Nodes/NodeTypes";
+import type { NodeError } from "./nodes/node-types";
 
 interface ValidationSuccess {
 	success: true;
 }
 interface ValidationFailure {
+	errorNodes: Array<NodeError>;
 	success: false;
-	errorNodes: NodeError[];
 }
-export type ValidationResult = ValidationSuccess | ValidationFailure;
+export type ValidationResult = ValidationFailure | ValidationSuccess;

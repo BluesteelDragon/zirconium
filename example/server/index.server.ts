@@ -1,16 +1,14 @@
-import { Result } from "@rbxts/rust-classes";
 import Zr from "@zirconium";
-import { prettyPrintNodes, ZrLexer, ZrTextStream } from "Ast";
-import { ZrScriptVersion } from "Ast/Parser";
-import { Token } from "Ast/Tokens/Tokens";
-import { ZrEnum } from "Data/Enum";
-import ZrLuauFunction from "Data/LuauFunction";
-import ZrObject from "Data/Object";
-import { ZrValue } from "./Data/Locals";
-import ZrUndefined from "./Data/Undefined";
-import { ZrUserdata } from "./Data/Userdata";
-import { ZrDebug, ZrPrint, ZrRange } from "./Functions/BuiltInFunctions";
-import { ZrScriptCreateResult } from "./Runtime/ScriptContext";
+import { prettyPrintNodes, ZrLexer, ZrTextStream } from "@zirconium/Ast";
+import { ZrScriptVersion } from "@zirconium/Ast/parser";
+import { Token } from "@zirconium/Ast/tokens/tokens";
+import { ZrEnum } from "@zirconium/data/enum";
+import ZrLuauFunction from "@zirconium/data/luau-function";
+import ZrObject from "@zirconium/data/object";
+import { ZrValue } from "@zirconium/data/locals";
+import ZrUndefined from "@zirconium/data/Undefined";
+import { ZrUserdata } from "@zirconium/data/userdata";
+import { ZrDebug, ZrPrint, ZrRange } from "@zirconium/functions/builtin-functions";
 
 const globals = Zr.createContext();
 globals.registerGlobal("print", ZrPrint);

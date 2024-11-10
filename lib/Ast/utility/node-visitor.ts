@@ -1,6 +1,6 @@
-import { Node, SourceFile } from "../Nodes/NodeTypes";
+import type { Node } from "../nodes/node-types";
 
-type VisitResult<T extends Node> = T | T[] | undefined | void;
+type VisitResult<T extends Node> = Array<T> | T | undefined | void;
 export type Visitor = (node: Node) => VisitResult<Node>;
 
 // export default class ZrAstNodeVisitor<TNode extends Node> {
@@ -32,7 +32,7 @@ export type Visitor = (node: Node) => VisitResult<Node>;
 // 	}
 // }
 
-function* iterateNodeChildren(node: Node) {
+function* iterateNodeChildren(node: Node): Generator<Node> {
 	if (node === undefined) {
 		return;
 	}
@@ -44,22 +44,22 @@ function* iterateNodeChildren(node: Node) {
 	}
 }
 
-function* iterateNodeAndChildren(node: Node) {
+function* iterateNodeAndChildren(node: Node): Generator<Node> {
 	yield node;
-	if (node && node.children) {
+	if (node.children) {
 		for (const child of node.children) {
 			yield child;
 		}
 	}
 }
 
-export function visitNodeAndChildren(targetNode: Node, visitor: Visitor) {
+export function visitNodeAndChildren(targetNode: Node, visitor: Visitor): void {
 	for (const node of iterateNodeAndChildren(targetNode)) {
 		visitor(node);
 	}
 }
 
-export function visitEachChild(targetNode: Node, visitor: Visitor) {
+export function visitEachChild(targetNode: Node, visitor: Visitor): void {
 	for (const node of iterateNodeChildren(targetNode)) {
 		visitor(node);
 	}
