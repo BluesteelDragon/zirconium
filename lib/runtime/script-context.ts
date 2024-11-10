@@ -1,9 +1,9 @@
 import { Result } from "@rbxts/rust-classes";
 
-import { ZrLexer, ZrTextStream } from "../Ast";
-import type { SourceFile } from "../Ast/nodes/node-types";
-import type { ZrParserError } from "../Ast/parser";
-import ZrParser, { ZrScriptMode, ZrScriptVersion } from "../Ast/parser";
+import { ZrLexer, ZrTextStream } from "../ast";
+import type { SourceFile } from "../ast/nodes/node-types";
+import type { ZrParserError } from "../ast/parser";
+import ZrParser, { ZrScriptMode, ZrScriptVersion } from "../ast/parser";
 import type ZrContext from "../data/context";
 import type { ZrValue } from "../data/locals";
 import type { ZrLuauArgument } from "../data/luau-function";
@@ -32,9 +32,6 @@ export default class ZrScriptContext {
 	/**
 	 * Register a global against this execution context to be exposed to the
 	 * script.
-	 *
-	 * FIXME: Types on this trip up if given a Userdata / InstanceUserdata
-	 * value, despite it seemingly being valid based on Vorlias' intent?.
 	 *
 	 * @param name - The identifier of the global.
 	 * @param value - The actual Zirconium-compatible object that this

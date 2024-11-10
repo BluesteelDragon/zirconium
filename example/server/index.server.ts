@@ -1,7 +1,7 @@
 import Zr from "@zirconium";
-import { prettyPrintNodes, ZrLexer, ZrTextStream } from "@zirconium/Ast";
-import { ZrScriptVersion } from "@zirconium/Ast/parser";
-import { Token } from "@zirconium/Ast/tokens/tokens";
+import { prettyPrintNodes, ZrLexer, ZrTextStream } from "@zirconium/ast";
+import { ZrScriptVersion } from "@zirconium/ast/parser";
+import { Token } from "@zirconium/ast/tokens/tokens";
 import { ZrEnum } from "@zirconium/data/enum";
 import ZrLuauFunction from "@zirconium/data/luau-function";
 import ZrObject from "@zirconium/data/object";

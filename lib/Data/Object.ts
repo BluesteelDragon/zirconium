@@ -1,6 +1,6 @@
 import { ZrIsUndefined } from "./helpers";
 import type { ZrValue } from "./locals";
-import ZrUndefined from "./Undefined";
+import ZrUndefined from "./undefined";
 
 /** A zirconium object. */
 export default class ZrObject {

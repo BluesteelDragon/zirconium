@@ -1,5 +1,5 @@
 local self = newproxy(true)
 getmetatable(self).__tostring = function()
-    return "(null)"
+	return "(null)"
 end
-return self;
+return self

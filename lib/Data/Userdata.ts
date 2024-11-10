@@ -6,9 +6,6 @@ import type { ZrValue } from "./locals";
 export abstract class ZrUserdata<T> {
 	public abstract value(): T;
 
-	public abstract isInstance(): this is ZrInstanceUserdata;
-	public abstract isObject<T>(object: new () => T): this is ZrObjectUserdata<T>;
-
 	public static fromInstance<TInstance extends Instance>(
 		instance: TInstance,
 	): ZrInstanceUserdata<TInstance> {
@@ -38,14 +35,6 @@ export class ZrObjectUserdata<T extends defined> extends ZrUserdata<T> {
 		super();
 	}
 
-	public isInstance(): boolean {
-		return false;
-	}
-
-	public isObject<T>(klass: new () => T): this is ZrObjectUserdata<T> {
-		return this.object instanceof klass;
-	}
-
 	public toString(): string {
 		return "toString" in this.object ? tostring(this.object) : "[ZrObjectUserdata]";
 	}
@@ -62,14 +51,6 @@ export class ZrInstanceUserdata<T extends Instance = Instance> extends ZrUserdat
 		super();
 	}
 
-	public isInstance(): boolean {
-		return true;
-	}
-
-	public isObject(value: unknown): boolean {
-		return false;
-	}
-
 	public toString(): string {
 		return tostring(this.value());
 	}
@@ -78,6 +59,7 @@ export class ZrInstanceUserdata<T extends Instance = Instance> extends ZrUserdat
 	 * Gets the property.
 	 *
 	 * @param name - The name of the property.
+	 * @returns The ZrValues.
 	 * @throws If the property isn't valid.
 	 * @internal
 	 */
@@ -105,7 +87,7 @@ export class ZrInstanceUserdata<T extends Instance = Instance> extends ZrUserdat
 		return this.instance;
 	}
 
-	public isA<T extends keyof Instances>(className: T): this is ZrInstanceUserdata<Instances[T]> {
-		return this.value().IsA(className);
+	public isA<V extends keyof Instances>(cName: V): this is ZrInstanceUserdata<Instances[V]> {
+		return this.value().IsA(cName);
 	}
 }

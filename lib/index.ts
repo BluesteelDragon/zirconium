@@ -1,7 +1,6 @@
-import type { ZrValue } from "data/locals";
-import type { ZrLuauArgument } from "data/luau-function";
-import ZrPlayerScriptContext from "runtime/player-script-context";
-
+import type { ZrValue } from "./data/locals";
+import type { ZrLuauArgument } from "./data/luau-function";
+import ZrPlayerScriptContext from "./runtime/player-script-context";
 import ZrScriptContext from "./runtime/script-context";
 
 /** Zirconium Language Namespace. */

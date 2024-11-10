@@ -1,6 +1,5 @@
-import type { SourceFile } from "Ast/nodes/node-types";
-import { ZrInstanceUserdata } from "data/userdata";
-
+import type { SourceFile } from "../ast/nodes/node-types";
+import { ZrInstanceUserdata } from "../data/userdata";
 import ZrScript from "./script";
 import ZrScriptContext from "./script-context";
 

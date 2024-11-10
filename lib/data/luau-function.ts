@@ -1,6 +1,6 @@
 import type ZrContext from "./context";
 import type { ZrValue } from "./locals";
-import type ZrUndefined from "./Undefined";
+import type ZrUndefined from "./undefined";
 
 /**
  * A lua-side function.

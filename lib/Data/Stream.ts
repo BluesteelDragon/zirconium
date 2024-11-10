@@ -1,8 +1,7 @@
 // eslint-disable-next-line max-classes-per-file -- FIXME: Refactor into multiple files.
-import { stringify } from "functions/builtin-functions";
-
+import { stringify } from "../functions/builtin-functions";
 import type { ZrValue } from "./locals";
-import type ZrUndefined from "./Undefined";
+import type ZrUndefined from "./undefined";
 
 export class ZrInputStream {
 	constructor(private readonly input: ReadonlyArray<ZrUndefined | ZrValue>) {}

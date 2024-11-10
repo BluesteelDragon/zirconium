@@ -1,13 +1,10 @@
 /* eslint-disable max-lines -- FIXME: Try to split this up a bit. */
-import { ZrNodeFlag } from "Ast/nodes/enum";
-import { ZrEnum } from "data/enum";
-import { ZrEnumItem } from "data/enum-item";
-import ZrRange from "data/range";
 import { $print } from "rbxts-transform-debug";
 
-import { types } from "../Ast";
-import { isNode, ZrNodeKind } from "../Ast/nodes";
-import { getFriendlyName } from "../Ast/nodes/functions";
+import { types } from "../ast";
+import { isNode, ZrNodeKind } from "../ast/nodes";
+import { ZrNodeFlag } from "../ast/nodes/enum";
+import { getFriendlyName } from "../ast/nodes/functions";
 import type {
 	ArrayIndexExpression,
 	ArrayLiteralExpression,
@@ -27,17 +24,20 @@ import type {
 	SourceBlock,
 	SourceFile,
 	VariableDeclaration,
-} from "../Ast/nodes/node-types";
+} from "../ast/nodes/node-types";
 import ZrContext from "../data/context";
+import { ZrEnum } from "../data/enum";
+import { ZrEnumItem } from "../data/enum-item";
 import type { ZrValue } from "../data/locals";
 import ZrLocalStack, { StackValueAssignmentError } from "../data/locals";
 import ZrLuauFunction from "../data/luau-function";
 import ZrObject from "../data/object";
+import ZrRange from "../data/range";
 import { ZrInputStream, ZrOutputStream } from "../data/stream";
-import ZrUndefined from "../data/Undefined";
-import type { InferUserdataKeys } from "../data/userdata";
-import { ZrUserdata } from "../data/userdata";
+import ZrUndefined from "../data/undefined";
 import ZrUserFunction from "../data/user-function";
+import type { InferUserdataKeys } from "../data/userdata";
+import { ZrInstanceUserdata, ZrUserdata } from "../data/userdata";
 import { isArray, isMap } from "../util";
 
 export enum ZrRuntimeErrorCode {
@@ -183,7 +183,7 @@ export default class ZrRuntime {
 					isConstant,
 				);
 				if (result.isErr()) {
-					const { errValue } = result;
+					const errValue = result.unwrapErr();
 					if (errValue === StackValueAssignmentError.ReassignConstant) {
 						this.runtimeError(
 							`Unable to reassign constant or readonly '${identifier.name}'`,
@@ -398,7 +398,7 @@ export default class ZrRuntime {
 		key: string,
 		value: ZrValue,
 	): void {
-		if (userdata.isInstance()) {
+		if (userdata instanceof ZrInstanceUserdata) {
 			this.runtimeError(
 				"Runtime Violation: Instance properties are read-only via Zirconium",
 				ZrRuntimeErrorCode.InstanceSetViolation,
@@ -423,9 +423,12 @@ export default class ZrRuntime {
 		userdata: T,
 		key: string,
 	): Instance[InferUserdataKeys<T>] | ZrValue {
-		if (userdata.isInstance()) {
+		if (userdata instanceof ZrInstanceUserdata) {
 			try {
-				return userdata.get(key as InferUserdataKeys<T>);
+				// FIXME: Potential sign of a larger issue?
+				return userdata.get(key as InferUserdataKeys<T>) as
+					| Instance[InferUserdataKeys<T>]
+					| ZrValue;
 			} catch (err) {
 				this.runtimeError(
 					tostring(err),

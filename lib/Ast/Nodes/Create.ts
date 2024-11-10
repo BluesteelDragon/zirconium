@@ -54,7 +54,7 @@ function createNode<T extends keyof NodeTypes>(kind: T): Writable<NodeTypes[T & 
 	return {
 		flags: 0,
 		kind,
-	} as Writable<NodeTypes[T & ZrNodeKind]>;
+	} as unknown as Writable<NodeTypes[T & ZrNodeKind]>;
 }
 
 /**
@@ -64,8 +64,7 @@ function createNode<T extends keyof NodeTypes>(kind: T): Writable<NodeTypes[T & 
  */
 export function updateNodeInternal<TNode extends Node>(node: TNode, props: Partial<TNode>): TNode {
 	for (const [key, property] of pairs(props)) {
-		/** @ts-ignore -- Seems to be acceptable. */
-		node[key] = property;
+		node[key as keyof TNode] = property as TNode[keyof TNode];
 	}
 
 	return node;

@@ -1,12 +1,11 @@
-import { isNode } from "Ast";
-import { ZrNodeKind } from "Ast/nodes";
-
+import { isNode } from "../ast";
+import { ZrNodeKind } from "../ast/nodes";
 import type {
 	FunctionDeclaration,
 	FunctionExpression,
 	ParameterDeclaration,
 	SourceBlock,
-} from "../Ast/nodes/node-types";
+} from "../ast/nodes/node-types";
 
 /** A function declared by a user. */
 export default class ZrUserFunction {

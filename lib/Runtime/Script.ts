@@ -1,6 +1,6 @@
 import { $print } from "rbxts-transform-debug";
 
-import type { SourceFile } from "../Ast/nodes/node-types";
+import type { SourceFile } from "../ast/nodes/node-types";
 import type { ZrValue } from "../data/locals";
 import ZrLocalStack from "../data/locals";
 import type ZrLuauFunction from "../data/luau-function";

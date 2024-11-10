@@ -8,11 +8,12 @@
 		"rootDirs": ["server", "client", "../lib"],
 		"module": "CommonJS",
 		"moduleResolution": "Node",
+		"moduleDetection": "force",
 		"paths": {
 			"@zirconium": ["../lib"],
 			"@zirconium/*": ["../lib/*"],
-			"@rbxts/zirconium-ast": ["../lib/Ast"],
-			"@rbxts/zirconium-ast/*": ["../lib/Ast/*"]
+			"@rbxts/zirconium-ast": ["../lib/ast"],
+			"@rbxts/zirconium-ast/*": ["../lib/ast/*"]
 		},
 		"resolveJsonModule": true,
 		"typeRoots": ["../node_modules/@rbxts"],
@@ -30,5 +31,6 @@
 			}
 		]
 	},
-	"include": ["**/*", "../lib/**/*"]
+	"include": ["**/*", "../lib/**/*"],
+	"exclude": ["eslint.config.ts"]
 }

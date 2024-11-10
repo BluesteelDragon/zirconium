@@ -1,13 +1,13 @@
 import { Result } from "@rbxts/rust-classes";
 
-import { isNode, ZrNodeKind } from "../Ast/nodes";
-import type { InterpolatedStringExpression } from "../Ast/nodes/node-types";
+import { isNode, ZrNodeKind } from "../ast/nodes";
+import type { InterpolatedStringExpression } from "../ast/nodes/node-types";
 import type { ZrEnum } from "./enum";
 import type { ZrEnumItem } from "./enum-item";
 import ZrLuauFunction from "./luau-function";
 import type ZrObject from "./object";
 import type ZrRange from "./range";
-import ZrUndefined from "./Undefined";
+import ZrUndefined from "./undefined";
 import type ZrUserFunction from "./user-function";
 import type { ZrUserdata } from "./userdata";
 

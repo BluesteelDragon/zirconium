@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-classes-per-file -- FIXME: Refactor into multiple files.
-import { isNode, ZrNodeKind } from "../Ast/nodes";
-import type { Node, SourceFile } from "../Ast/nodes/node-types";
+import { isNode, ZrNodeKind } from "../ast/nodes";
+import type { Node, SourceFile } from "../ast/nodes/node-types";
 
 export interface ZrBinder {
 	// TODO

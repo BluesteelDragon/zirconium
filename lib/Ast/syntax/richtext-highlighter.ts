@@ -32,16 +32,18 @@ function font(text: string, color: string | undefined): string {
 	return color ? `<font color="${color}">${text}</font>` : text;
 }
 
+const DEFAULT: ZrLexerOptions = {
+	CommandNames: [],
+	ExperimentalSyntaxHighlighter: true,
+	SyntaxHighlighterLexer: true,
+};
+
 export default class ZrRichTextHighlighter {
 	private readonly lexer: ZrLexer;
 	constructor(
 		source: string,
 		private readonly options: ZrThemeOptions = DARK_THEME,
-		lexerOptions: Partial<ZrLexerOptions> = {
-			CommandNames: [],
-			ExperimentalSyntaxHighlighter: true,
-			SyntaxHighlighterLexer: true,
-		},
+		lexerOptions: Partial<ZrLexerOptions> = DEFAULT,
 	) {
 		const stream = new ZrTextStream(source);
 		this.lexer = new ZrLexer(stream, lexerOptions);

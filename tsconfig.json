@@ -1,10 +1,13 @@
 {
 	"compilerOptions": {
+		"incremental": true,
+		"tsBuildInfoFile": "out/.tsbuildinfo",
 		"target": "ESNext",
 		"jsx": "react",
 		"jsxFactory": "Roact.createElement",
+		"moduleDetection": "force",
 		"noLib": true,
-		"baseUrl": "lib",
+		"experimentalDecorators": true,
 		"rootDir": "lib",
 		"module": "commonjs",
 		"moduleResolution": "Node",
@@ -16,6 +19,7 @@
 		"outDir": "out",
 		"stripInternal": true,
 		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
 		"plugins": [
 			{
 				"transform": "rbxts-transform-debug",
