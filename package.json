@@ -8,7 +8,8 @@
 		"url": "git+https://github.com/BluesteelDragon/zirconium.git"
 	},
 	"license": "ISC",
-	"maintainers": [
+	"author": "vorlias",
+	"contributors": [
 		"vorlias",
 		"venerith"
 	],
