@@ -6,7 +6,7 @@ import { ZrEnum } from "@zirconium/data/enum";
 import ZrLuauFunction from "@zirconium/data/luau-function";
 import ZrObject from "@zirconium/data/object";
 import { ZrValue } from "@zirconium/data/locals";
-import ZrUndefined from "@zirconium/data/Undefined";
+import ZrUndefined from "@zirconium/data/undefined";
 import { ZrUserdata } from "@zirconium/data/userdata";
 import { ZrDebug, ZrPrint, ZrRange } from "@zirconium/functions/builtin-functions";
 

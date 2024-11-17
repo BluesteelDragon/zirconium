@@ -3,10 +3,16 @@
 </div>
 <div align="center">
 	<h1>Zirconium</h1>
-    	<a href="https://www.npmjs.com/package/@rbxts/zirconium">
-		<img src="https://badge.fury.io/js/%40rbxts%2Fzirconium.svg"></img>
+        <a href="https://www.npmjs.com/package/@cwyvern/zirconium">
+		<img src="https://badge.fury.io/js/%40cwyvern%2Fzirconium.svg"></img>
 	</a>
 </div>
+
+> [!IMPORTANT]
+> This is a fork of Vorlias' original Zirconium package which was made for a fork of Zircon. <br/>
+> While I believe I have fixed the types to work now with typescript 5.5, it is entirely possible there are edge cases I have yet to find.
+> If you're going to use this, be aware it's currently possibly unstable and I've yet to come to a finalised API surface for V2. In addition this will likely be customised to my own needs.
+> This also does not use the official Zr v2 branch, as the bytecode and vm based approach was unfinished, instead it is only v2 due to the major version changes and API changes.
 
 # What Zirconium is
 - Zirconium is a runtime scripting language for Roblox, for programmatic manipulation of Roblox games during runtime. Unlike other solutions this is not bound to any sort of command framework. It is inspired by Rust and TypeScript.
@@ -83,7 +89,6 @@
     }
     let emptyObject = {}
     ```
-
 
 ## Limitations
 - Stack limit: 256. This is intentionally small as _you shouldn't_ be doing anything that complex with this.

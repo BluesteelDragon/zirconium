@@ -26,5 +26,8 @@
 		"source.organizeImports": "never"
 	},
 	"npm.packageManager": "pnpm",
-	"eslint.options": { "flags": ["unstable_ts_config"] }
+	"eslint.options": { "flags": ["unstable_ts_config"] },
+	"luau-lsp.require.directoryAliases": {
+		"@lune/": "~/.lune/.typedefs/0.8.9/"
+	}
 }

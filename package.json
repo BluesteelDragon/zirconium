@@ -1,33 +1,39 @@
 {
-	"name": "@rbxts/zirconium",
-	"version": "1.1.0-beta.4",
+	"name": "@cwyvern/zirconium",
+	"version": "2.0.0-indev.1",
 	"description": "",
 	"keywords": [],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/roblox-aurora/zirconium.git"
+		"url": "git+https://github.com/BluesteelDragon/zirconium.git"
 	},
 	"license": "ISC",
 	"author": "vorlias",
+	"maintainers": [
+		"venerith"
+	],
 	"type": "module",
-	"main": "out/init.lua",
+	"main": "out/init.luau",
 	"types": "out/index.d.ts",
+	"files": [
+		"out",
+		"!**/*.tsbuildinfo",
+		"!**/__tests__"
+	],
 	"scripts": {
 		"build": "rbxtsc --type=package --verbose",
-		"build:example": "rbxtsc --type=game -p ./example -i ./include",
-		"dev:example": "cross-env NODE_ENV=development concurrently npm:watch:example npm:serve",
 		"lint": "eslint --max-warnings 0 --flag unstable_ts_config .",
 		"prepare": "pnpm run build",
-		"serve": "rojo serve ./example/default.project.json --port 34567",
-		"watch:example": "rbxtsc -w --type=game -p ./example -i ./include"
+		"watch:example": "rbxtsc -w --type=game"
 	},
 	"dependencies": {
 		"@rbxts/rust-classes": "0.13.0"
 	},
 	"devDependencies": {
-		"@isentinel/eslint-config": "0.8.0",
+		"@isentinel/eslint-config": "0.9.0",
 		"@rbxts/compiler-types": "3.0.0-types.0",
-		"@rbxts/roact": "1.4.0-ts.2",
+		"@rbxts/jest": "0.1.0",
+		"@rbxts/jest-globals": "0.1.0",
 		"@rbxts/types": "1.0.813",
 		"concurrently": "9.1.0",
 		"cross-env": "7.0.3",

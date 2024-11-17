@@ -13,11 +13,17 @@ importers:
         version: 0.13.0
     devDependencies:
       '@isentinel/eslint-config':
-        specifier: 0.8.0
-        version: 0.8.0(@babel/core@7.24.3)(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)(vue-eslint-parser@9.4.3(eslint@9.13.0(jiti@2.3.3)))
+        specifier: 0.9.0
+        version: 0.9.0(@babel/core@7.24.3)(eslint-plugin-jest@28.9.0(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)(vue-eslint-parser@9.4.3(eslint@9.13.0(jiti@2.3.3)))
       '@rbxts/compiler-types':
         specifier: 3.0.0-types.0
         version: 3.0.0-types.0
+      '@rbxts/jest':
+        specifier: 0.1.0
+        version: 0.1.0
+      '@rbxts/jest-globals':
+        specifier: 0.1.0
+        version: 0.1.0
       '@rbxts/roact':
         specifier: 1.4.0-ts.2
         version: 1.4.0-ts.2
@@ -987,15 +993,18 @@ packages:
   '@isentinel/dict-roblox@1.0.3':
     resolution: {integrity: sha512-XR1KVHZLyyamVobUICxTlDkB3gfLVuV34mdFQeIL7DfCtNI2uCeuZm6g6J63AQzUrqsCIUF166Ogf+TL0przdg==}
 
-  '@isentinel/eslint-config@0.8.0':
-    resolution: {integrity: sha512-C86k1rvqRuh1zKuPyZKcbSTJREqdUcwOed+t9BTGCNPHx980DXCgZ1g4rbB+r+7hsSz5QEejq3fMHSB1vylSSQ==}
+  '@isentinel/eslint-config@0.9.0':
+    resolution: {integrity: sha512-sozZKi7GtMtJBbPkrlk1bA+4f6gQv6cwte+rf0lG17Gpls2i6Abtq4Z/cmh1n/oFkk/bUsguS/GTRoG1qri5cQ==}
     hasBin: true
     peerDependencies:
       '@eslint-react/eslint-plugin': ^1.14.0
       eslint: ^9.10.0
+      eslint-plugin-jest: ^28.9.0
       eslint-plugin-react-roblox-hooks: ^5.1.0-rbx.1
     peerDependenciesMeta:
       '@eslint-react/eslint-plugin':
+        optional: true
+      eslint-plugin-jest:
         optional: true
       eslint-plugin-react-roblox-hooks:
         optional: true
@@ -1042,6 +1051,24 @@ packages:
 
   '@rbxts/compiler-types@3.0.0-types.0':
     resolution: {integrity: sha512-VGOHJPoL7+56NTatMGqQj3K7xWuzEV+aP4QD5vZiHu+bcff3kiTmtoadaF6NkJrmwfFAvbsd4Dg764ZjWNceag==}
+
+  '@rbxts/jest-globals@0.1.0':
+    resolution: {integrity: sha512-k6sPSVfohlHRLLBT+LuK5xhWy87YzNg7LpcWmPkzXZUUM6iUU+uXWtphegcT+fR4ZHRXFt0tjDepA61uMRQQQA==}
+
+  '@rbxts/jest-matcher-utils@0.1.0':
+    resolution: {integrity: sha512-SvUm5b47KvxjXWMdg3Ei7nMaAurLI8uDlOR7lN02QNCSSqm1KekkLe1p/knc4adyZuq3L/07cDUSRYLCIgn9qA==}
+
+  '@rbxts/jest-vendor@0.1.0':
+    resolution: {integrity: sha512-qEQbp8cUtIkiOFoxIC2wR7ml3++0Pf56Xf17YIGTQRrQig3UAZincD+DHxVd/YNHft38MRGpD7FinWfroNxUNA==}
+
+  '@rbxts/jest@0.1.0':
+    resolution: {integrity: sha512-0JmmHh0vPbydCRhPWNaU8eb9RcY82i80RP6N5uJphLSZSV57kUvX8ahk1RhbPcn8xFoTmh+Pm6YEdGiPAzX1BA==}
+
+  '@rbxts/pretty-format@0.1.0':
+    resolution: {integrity: sha512-ZEZM6wd2kWXhXYcr+Q6Vey2wcre6JP6LDRX4u6PnLOEHmSy5XiLCmed1sicYFQfFYgkG5bRk+sGCySSWFEbqoA==}
+
+  '@rbxts/react-vendor@17.2.1':
+    resolution: {integrity: sha512-7DxFweCbhhso4M4tl1pO7Kil9SZrvOl1SoZ4lnwUfoxdHvSmWgeKgaUqd+ZS3/u1E8kRraqGQ56Q8zjUEEUzlA==}
 
   '@rbxts/roact@1.4.0-ts.2':
     resolution: {integrity: sha512-JnbezUhKiVs8ID0cjjmYeGdf4N/Uao8BEMqNQSHUjOOKAI1GVBW2txRE3wUD3Svmw2PMtgCUJAa4mLEKutsQiA==}
@@ -1899,6 +1926,10 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       eslint: '>=8'
+
+  eslint-plugin-no-only-tests@3.3.0:
+    resolution: {integrity: sha512-brcKcxGnISN2CcVhXJ/kEQlNa0MEfGRtwKtWA16SkqXHKitaKIMrfemJKLKX1YqDU5C/5JY3PvZXd5jEW04e0Q==}
+    engines: {node: '>=5.0.0'}
 
   eslint-plugin-node@11.1.0:
     resolution: {integrity: sha512-oUwtPJ1W0SKD0Tr+wqu92c5xuCeQqB3hSCHasn/ZgjFdA9iDGNkNf2Zi9ztY7X+hNuMib23LNGRm6+uN+KLE3g==}
@@ -4552,7 +4583,7 @@ snapshots:
 
   '@isentinel/dict-roblox@1.0.3': {}
 
-  '@isentinel/eslint-config@0.8.0(@babel/core@7.24.3)(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)(vue-eslint-parser@9.4.3(eslint@9.13.0(jiti@2.3.3)))':
+  '@isentinel/eslint-config@0.9.0(@babel/core@7.24.3)(eslint-plugin-jest@28.9.0(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)(vue-eslint-parser@9.4.3(eslint@9.13.0(jiti@2.3.3)))':
     dependencies:
       '@antfu/install-pkg': 0.4.1
       '@clack/prompts': 0.7.0
@@ -4580,6 +4611,7 @@ snapshots:
       eslint-plugin-jsonc: 2.16.0(eslint@9.13.0(jiti@2.3.3))
       eslint-plugin-markdown: 5.1.0(eslint@9.13.0(jiti@2.3.3))
       eslint-plugin-no-autofix: 2.1.0(eslint@9.13.0(jiti@2.3.3))
+      eslint-plugin-no-only-tests: 3.3.0
       eslint-plugin-package-json: 0.15.3(eslint@9.13.0(jiti@2.3.3))(jsonc-eslint-parser@2.4.0)
       eslint-plugin-perfectionist: 3.6.0(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)(vue-eslint-parser@9.4.3(eslint@9.13.0(jiti@2.3.3)))
       eslint-plugin-promise: 7.1.0(eslint@9.13.0(jiti@2.3.3))
@@ -4598,6 +4630,8 @@ snapshots:
       toml-eslint-parser: 0.10.0
       yaml-eslint-parser: 1.2.3
       yargs: 17.7.2
+    optionalDependencies:
+      eslint-plugin-jest: 28.9.0(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)
     transitivePeerDependencies:
       - '@babel/core'
       - '@types/eslint'
@@ -4650,6 +4684,33 @@ snapshots:
   '@pkgr/core@0.1.1': {}
 
   '@rbxts/compiler-types@3.0.0-types.0': {}
+
+  '@rbxts/jest-globals@0.1.0':
+    dependencies:
+      '@rbxts/jest-matcher-utils': 0.1.0
+      '@rbxts/jest-vendor': 0.1.0
+      '@rbxts/pretty-format': 0.1.0
+
+  '@rbxts/jest-matcher-utils@0.1.0':
+    dependencies:
+      '@rbxts/jest-vendor': 0.1.0
+      '@rbxts/pretty-format': 0.1.0
+
+  '@rbxts/jest-vendor@0.1.0':
+    dependencies:
+      '@rbxts/react-vendor': 17.2.1
+
+  '@rbxts/jest@0.1.0':
+    dependencies:
+      '@rbxts/jest-globals': 0.1.0
+      '@rbxts/jest-vendor': 0.1.0
+      '@rbxts/pretty-format': 0.1.0
+
+  '@rbxts/pretty-format@0.1.0':
+    dependencies:
+      '@rbxts/jest-vendor': 0.1.0
+
+  '@rbxts/react-vendor@17.2.1': {}
 
   '@rbxts/roact@1.4.0-ts.2': {}
 
@@ -4768,7 +4829,7 @@ snapshots:
 
   '@typescript-eslint/eslint-plugin@7.16.1(@typescript-eslint/parser@8.6.0(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4))(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)':
     dependencies:
-      '@eslint-community/regexpp': 4.10.0
+      '@eslint-community/regexpp': 4.12.1
       '@typescript-eslint/parser': 8.6.0(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)
       '@typescript-eslint/scope-manager': 7.16.1
       '@typescript-eslint/type-utils': 7.16.1(eslint@9.13.0(jiti@2.3.3))(typescript@5.5.4)
@@ -4918,7 +4979,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.6.0
+      semver: 7.6.3
       ts-api-utils: 1.4.0(typescript@5.5.4)
     optionalDependencies:
       typescript: 5.5.4
@@ -5860,6 +5921,8 @@ snapshots:
       eslint: 9.13.0(jiti@2.3.3)
       eslint-rule-composer: 0.3.0
       find-up: 5.0.0
+
+  eslint-plugin-no-only-tests@3.3.0: {}
 
   eslint-plugin-node@11.1.0(eslint@9.13.0(jiti@2.3.3)):
     dependencies:
@@ -7088,7 +7151,7 @@ snapshots:
 
   refa@0.12.1:
     dependencies:
-      '@eslint-community/regexpp': 4.10.0
+      '@eslint-community/regexpp': 4.12.1
 
   reflect.getprototypeof@1.0.6:
     dependencies:
@@ -7114,7 +7177,7 @@ snapshots:
 
   regexp-ast-analysis@0.7.1:
     dependencies:
-      '@eslint-community/regexpp': 4.10.0
+      '@eslint-community/regexpp': 4.12.1
       refa: 0.12.1
 
   regexp-tree@0.1.27: {}
@@ -7208,7 +7271,7 @@ snapshots:
 
   scslre@0.3.0:
     dependencies:
-      '@eslint-community/regexpp': 4.10.0
+      '@eslint-community/regexpp': 4.12.1
       refa: 0.12.1
       regexp-ast-analysis: 0.7.1
 
@@ -7537,7 +7600,7 @@ snapshots:
       espree: 9.6.1
       esquery: 1.6.0
       lodash: 4.17.21
-      semver: 7.6.0
+      semver: 7.6.3
     transitivePeerDependencies:
       - supports-color
 
