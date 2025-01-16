@@ -4,3 +4,4 @@
 *.tsbuildinfo
 /core/example/build
 /example/build
+sourcemap.json

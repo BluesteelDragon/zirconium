@@ -4,4 +4,4 @@
 !out/*.d.ts
 !out/**/*.d.ts
 !out/**/*.json
-out/__test__/**/*
+out/**/__tests__/**/*
